@@ -1,4 +1,5 @@
 """This is the main program and acts as the interplay between the image acquisition and the image processing."""
+
 import argparse
 import sys
 from queue import Queue
@@ -35,6 +36,9 @@ def stop_processes(camera_acquisition_system, capture_thread, image_queue):
     print("\nStopping the process...")
     # Stop image acquisition
     camera_acquisition_system.stop_capture()
+    # Wait until the image processor has processed all images from the queue
+    while not image_queue.empty():
+        time.sleep(0.5)
     # Stop the capture thread
     capture_thread.join()
     # Stop the image queue
@@ -56,11 +60,11 @@ def main():
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue)
 
+    # Start the process if the program is able to open the camera and configure its settings
     if camera_acquisition_system.open_camera() and camera_acquisition_system.set_camera_settings():
         # Start the capture thread
         capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
         capture_thread.start()
-
         # Start image processing thread
         processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
         processing_tread.start()

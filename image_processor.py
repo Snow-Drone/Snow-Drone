@@ -24,7 +24,7 @@ class ImageProcessor:
             print("Directory '%s' created" %self.path)
 
         except OSError as error:
-            print(error)
+            print("Error:", error)
             return False
         
     def flip_image(self, image):
@@ -44,7 +44,7 @@ class ImageProcessor:
         return variance
 
     def process_images(self):
-        """Continuously process images from the queue."""
+        """Continuously process images from the queue until the process is stopped."""
         snowflake_number = 1
 
         while True:
