@@ -52,6 +52,33 @@ class ImageAcquisition:
         """Set the steam mode to be able to send commands to the camera"""
 
         try:
+            # Give the user the option to reset the camera
+            user_input = input("Do you want to reset the camera? (yes/no): ")
+            if user_input.lower() in ["yes", "y"]:
+                # Access the User Set selector node
+                user_set_selector = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("UserSetSelector"))
+                if not PySpin.IsAvailable(user_set_selector) or not PySpin.IsWritable(user_set_selector):
+                    print("Unable to access UserSetSelector. Aborting reset.")
+                    return False
+                
+                # Select the default user set
+                user_set_default = user_set_selector.GetEntryByName("Default")
+                if not PySpin.IsAvailable(user_set_default) or not PySpin.IsReadable(user_set_default):
+                    print("Default user set is not available. Aborting reset.")
+                    return False
+
+                # Set the user set to default
+                user_set_selector.SetIntValue(user_set_default.GetValue())
+
+                # Load the default user set settings
+                user_set_load = PySpin.CCommandPtr(self.cam.GetNodeMap().GetNode("UserSetLoad"))
+                if not PySpin.IsAvailable(user_set_load) or not PySpin.IsWritable(user_set_load):
+                    print("Unable to load UserSetLoad. Aborting reset.")
+                    return False
+                user_set_load.Execute()
+                
+                print("Camera reset to default settings.")
+
             # Retrieve GenICam nodemap
             self.nodemap = self.cam.GetNodeMap()
 
