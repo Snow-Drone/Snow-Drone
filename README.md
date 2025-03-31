@@ -29,7 +29,7 @@ The following camera parameters can be changed by a command in the terminal at t
 3. **Strobe Delay**
 4. **Gain/ISO**
 5. **Frame Rate**
-6. **Queue Size**
+6. **Queue Size**\
 An example is written below, which changes the exposure time to 150 microseconds:
 ```bash
 python3 main.py --exposure_time 150
