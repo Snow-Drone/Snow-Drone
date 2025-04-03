@@ -48,7 +48,7 @@ class ImageAcquisition:
         return True
 
 
-    def set_camera_settings(self):
+    def setup_camera(self):
         """Set the steam mode to be able to send commands to the camera"""
 
         try:
@@ -245,7 +245,7 @@ class ImageAcquisition:
         frame_rate = min(self.config["frame_rate"], self.cam.AcquisitionFrameRate.GetMax())
         self.cam.AcquisitionFrameRate.SetValue(frame_rate)
 
-        # waiting time for buffer to be ready (error otherwise)
+        # waiting time for image buffer and LED circuit to be ready (error otherwise)
         time.sleep(1)
 
         while self.running.is_set():
