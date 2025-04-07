@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("-g", "--gain", type=float, default=30.0, required=False) # Set default gain to the maximum value
     parser.add_argument("-f", "--frame_rate", type=float, default=10.0, required=False) # Set default frame rate to the max
     parser.add_argument("-q", "--queue_size", type=int, default=100, required=False) # Set default queue size to 50 images
-    parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=350, required=False) # Set default gradient threshold to 150 (empirical value)
+    parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=300, required=False) # Set default gradient threshold to 300 (empirical value)
 
     # Parse Argumets
     args = parser.parse_args()

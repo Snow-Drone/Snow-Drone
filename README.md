@@ -23,13 +23,15 @@ python3 main.py
 ```
 
 ## Parameters
-The following camera parameters can be changed by a command in the terminal at the start of the program. 
+The following camera parameters can be changed by a command in the terminal at the start of the program.
+
 1. **Exposure Time**
 2. **Strobe Duration**
 3. **Strobe Delay**
 4. **Gain/ISO**
 5. **Frame Rate**
-6. **Queue Size**\
+6. **Queue Size**
+
 An example is written below, which changes the exposure time to 150 microseconds:
 ```bash
 python3 main.py --exposure_time 150

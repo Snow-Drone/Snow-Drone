@@ -4,7 +4,7 @@ import cv2
 import os
 import numpy as np
 import time
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_coeffs
 
 class ImageProcessor:
     def __init__(self, config, queue):
@@ -51,6 +51,7 @@ class ImageProcessor:
         # Count amount of sharp edges
         threshold = 75 # Empirical threshold for sharp edges
         sharp_edges = np.sum(grad_magnitude_norm > threshold)
+        print(sharp_edges)
 
         return sharp_edges
 
@@ -66,11 +67,23 @@ class ImageProcessor:
                 image = self.queue.get()
                 image_flipped = self.flip_image(image)
 
-                 # Apply Savitzky-Golay filter along each row
-                smoothed_rows = savgol_filter(image_flipped, window_length=11, polyorder=2, axis=1)
+                # Define Savitzky-Golay filter parameters and get coefficients
+                window_length = 11 # Filter size
+                polyorder = 2 # Polynomial order
+                coeffs = savgol_coeffs(window_length, polyorder).astype(np.float32)
 
-                # Apply Savitzky-Golay filter along each column
-                smoothed_image = savgol_filter(smoothed_rows, window_length=11, polyorder=2, axis=0)
+                # Convert coefficients to row and column vectors
+                row_coeffs = coeffs.reshape(1, -1)
+                column_coeffs = coeffs.reshape(-1, 1)
+                
+                # Apply 1D filter along rows (horizontal smoothing)
+                smoothed_rows = cv2.sepFilter2D(image_flipped.astype(np.float32), ddepth=-1, kernelX=row_coeffs, kernelY=np.array([[1]], dtype=np.float32))
+
+                # Apply 1D filter along columns (vertical smoothing)
+                smoothed_image = cv2.sepFilter2D(smoothed_rows, ddepth=-1, kernelX=np.array([[1]], dtype=np.float32), kernelY=column_coeffs)
+
+                # Covert image back to uint8 format
+                smoothed_image = np.clip(smoothed_image, 0, 255).astype(np.uint8)
 
                 # Save image if the amount of sharp edges in it are above a defined threshold
                 if self.calculate_sharp_edges(smoothed_image) > self.config["sharp_edges_threshold"]:
