@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("-g", "--gain", type=float, default=30.0, required=False) # Set default gain to the maximum value
     parser.add_argument("-f", "--frame_rate", type=float, default=10.0, required=False) # Set default frame rate to the max
     parser.add_argument("-q", "--queue_size", type=int, default=100, required=False) # Set default queue size to 50 images
-    parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=300, required=False) # Set default gradient threshold to 300 (empirical value)
+    parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=325, required=False) # Set default gradient threshold to 325 (empirical value)
 
     # Parse Argumets
     args = parser.parse_args()
@@ -32,7 +32,7 @@ def parse_args():
 
     return config
 
-def stop_processes(camera_acquisition_system, capture_thread, image_queue):
+def stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data):
     # Stop the image acquisition process
     print("\nStopping the process...")
     # Stop image acquisition
@@ -42,6 +42,9 @@ def stop_processes(camera_acquisition_system, capture_thread, image_queue):
         time.sleep(0.5)
     # Stop the capture thread
     capture_thread.join()
+    # Save the data in the image processor file
+    save_data.set()
+    time.sleep(0.5)
     # Stop the image queue
     image_queue.join()
     # Close the camera
@@ -57,9 +60,12 @@ def main():
     # Initialize a queue to temporarily store images
     image_queue = Queue(maxsize=config["queue_size"]) # Adjust size as needed
 
+    # Define a signal that tells the image processor to save the acquired data
+    save_data = threading.Event()
+
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, image_queue)
-    image_processing_system = ImageProcessor(config, image_queue)
+    image_processing_system = ImageProcessor(config, image_queue, save_data)
 
     # Start the process if the program is able to open the camera and configure its settings
     if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera():
@@ -80,11 +86,11 @@ def main():
 
     except PySpin.SpinnakerException as ex:
         print('Error: %s' % ex)
-        stop_processes(camera_acquisition_system, capture_thread, image_queue)
+        stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
         return False
     
     except KeyboardInterrupt:
-        stop_processes(camera_acquisition_system, capture_thread, image_queue)
+        stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
 
     return True
 
