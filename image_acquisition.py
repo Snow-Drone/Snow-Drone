@@ -49,7 +49,7 @@ class ImageAcquisition:
 
 
     def setup_camera(self):
-        """Set the steam mode to be able to send commands to the camera"""
+        """Setup the camera and its parameters in order to start communicating with it."""
 
         try:
             # Give the user the option to reset the camera
@@ -207,9 +207,9 @@ class ImageAcquisition:
         
 
     def capture(self):
-        """Continously capture images and add them to the queue"""
+        """Continuously capture images and add them to the queue"""
 
-        print('\n*** IMAGE ACQUISITION ***\n')
+        print('\n*** START IMAGE ACQUISITION ***\n')
 
         # Begin Acquisition
         self.cam.BeginAcquisition()
@@ -263,7 +263,7 @@ class ImageAcquisition:
             image.Release()
 
     def close_camera(self):
-        """End acquisition, turn off LED and deinitialize the camera"""
+        """End acquisition, turn off LED and deinitialize the camera."""
 
         self.cam.EndAcquisition()
         

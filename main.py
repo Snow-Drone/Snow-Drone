@@ -58,7 +58,7 @@ def main():
     config = parse_args()
     
     # Initialize a queue to temporarily store images
-    image_queue = Queue(maxsize=config["queue_size"]) # Adjust size as needed
+    image_queue = Queue(maxsize=config["queue_size"])
 
     # Define a signal that tells the image processor to save the acquired data
     save_data = threading.Event()

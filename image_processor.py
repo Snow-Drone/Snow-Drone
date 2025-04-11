@@ -33,7 +33,7 @@ class ImageProcessor:
             return False
         
     def flip_image(self, image):
-        """Flips an image from the queue that it has the correct orientation"""
+        """Flips an image from the queue that it has the correct orientation."""
 
         # Convert PySpin image to NumPy array
         image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
@@ -42,7 +42,7 @@ class ImageProcessor:
         return np.flipud(np.fliplr(image_array))
 
     def calculate_sharp_edges(self, image):
-        """Calculates the amount of sharp edges in the image"""
+        """Calculates the amount of sharp edges in the image."""
 
         # Calculate gradients of filtered image in x and y direction
         grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
@@ -104,12 +104,12 @@ class ImageProcessor:
 
                     # Create binary image with defined threshold
                     thresh = 12
-                    bin_image = ((smoothed_image > thresh) * 255)
+                    binary_image = ((smoothed_image > thresh) * 255)
                     # Morphological closing to fill small holes inside snowlakes
-                    kernel = np.ones((25, 25), np.uint8)
-                    closed_bin_image = cv2.morphologyEx(bin_image.astype(np.uint8), cv2.MORPH_CLOSE, kernel, iterations=2)
+                    kernel = np.ones((15, 15), np.uint8)
+                    closed_binary_image = cv2.morphologyEx(binary_image.astype(np.uint8), cv2.MORPH_CLOSE, kernel, iterations=3)
                     # Calculate regions of snowflakes in image
-                    label_img = label(closed_bin_image)
+                    label_img = label(closed_binary_image)
                     snowflakes = regionprops(label_img)
                     # Initialize a list to store characteristic values of snowflakes
                     list = []
@@ -120,7 +120,7 @@ class ImageProcessor:
                             # Append center of snowflake
                             list.append(snowflake.centroid)
                             # Append orientation of snowflake in grad
-                            list.append((180*snowflake.orientation)/(2*math.pi))
+                            list.append((180*snowflake.orientation)/math.pi)
                             # Append aspect ratio of snowflake
                             list.append(snowflake.axis_minor_length/snowflake.axis_major_length)
                             # Append diameter in micrometers
@@ -143,6 +143,8 @@ class ImageProcessor:
         # Write the data into the created csv file
         with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["image_name", "values"])  # header
+            # Define header
+            writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity)"])
+            # Write values of all saved images to the csv file
             for image_name, values in data.items():
                 writer.writerow([image_name, json.dumps(values)])
