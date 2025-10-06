@@ -9,11 +9,14 @@ import time
 
 from image_acquisition import ImageAcquisition
 from image_processor import ImageProcessor
+from hard_reset import *
+
+VERSION = "0.1.2"
 
 
 def parse_args():
     # Create Parser
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="Snow-Drone")
 
     # Add arguments to parser
     parser.add_argument("-e", "--exposure_time", type=int, default=200, required=False) # Set default exposure time to 200 us
@@ -23,6 +26,11 @@ def parse_args():
     parser.add_argument("-f", "--frame_rate", type=float, default=10.0, required=False) # Set default frame rate to the max
     parser.add_argument("-q", "--queue_size", type=int, default=100, required=False) # Set default queue size to 50 images
     parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=200, required=False) # Set default gradient threshold to 200 (empirical value)
+    parser.add_argument("-T", "--test", action='store_true') # test mode, takes 10 pictures without processing them
+    parser.add_argument("-l", "--live", action='store_true') # displays live feed of camera frames
+    parser.add_argument("-y", "--reset", action='store_true')
+    parser.add_argument("-R", "--hardreset", action='store_true')
+    parser.add_argument("-v", "--version", action='store_true')
 
     # Parse Argumets
     args = parser.parse_args()
@@ -56,7 +64,18 @@ def stop_processes(camera_acquisition_system, capture_thread, image_queue, save_
 def main():
     # Define camera configuration (settings)
     config = parse_args()
+
+    if config["hardreset"] == True:
+        print("Performing a hard reset and exiting.")
+        hard_reset()
+        print("Sucessfully reset all cameras. Exiting now...")
+        return True
     
+    if config["version"] == True:
+        print(f"Snow-Drone, 2025-v{VERSION}.")
+        return True
+
+    # if test flag isn't set, run acquisition loop
     # Initialize a queue to temporarily store images
     image_queue = Queue(maxsize=config["queue_size"])
 
@@ -67,31 +86,72 @@ def main():
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
 
-    # Start the process if the program is able to open the camera and configure its settings
-    if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera():
-        # Start the capture thread
-        capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
-        capture_thread.start()
-        # Start image processing thread
-        processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
-        processing_tread.start()
+    if (not config["test"] == True) and (not config["live"] == True):
+        # Start the process if the program is able to open the camera and configure its settings
+        if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
+            # Start the capture thread
+            capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
+            capture_thread.start()
+            # Start image processing thread
+            processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
+            processing_tread.start()
 
+        else:
+            return False
+
+        # Contine the capturing process until an error appears or it is interrupted by the keyboard
+        try:
+            while True:
+                time.sleep(0.05)
+
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
+            stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
+            return False
+        
+        except KeyboardInterrupt:
+            stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
+
+    elif config["live"] == True and not (config["test"] == True):
+        # Start the process if the program is able to open the camera and configure its settings
+        if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
+            # Start the capture thread
+            capture_thread = threading.Thread(target=camera_acquisition_system.capture_live, daemon=True)
+            capture_thread.start()
+            # Start image processing thread
+            processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
+            processing_tread.start()
+
+        else:
+            return False
+
+        # Contine the capturing process until an error appears or it is interrupted by the keyboard
+        try:
+            while True:
+                time.sleep(0.05)
+
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
+            stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
+            return False
+        
+        except KeyboardInterrupt:
+            stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
     else:
-        return False
+                
+        print(f"Test flag enabled, acquiring 10 frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
+        try:
+            if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
+                camera_acquisition_system.capture(config["test"])
+                camera_acquisition_system.close_camera()
+            else:
+                print("Failed to initialise camera")
+                return False
 
-    # Contine the capturing process until an error appears or it is interrupted by the keyboard
-    try:
-        while True:
-            time.sleep(0.05)
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
 
-    except PySpin.SpinnakerException as ex:
-        print('Error: %s' % ex)
-        stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
-        return False
-    
-    except KeyboardInterrupt:
-        stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
-
+    print("Exiting...")
     return True
 
 

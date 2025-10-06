@@ -3,6 +3,9 @@
 import PySpin
 import threading
 import time
+import os
+import cv2
+import numpy as np
 
 class ImageAcquisition:
     def __init__(self, config, queue):
@@ -46,39 +49,56 @@ class ImageAcquisition:
             return False
 
         return True
+    
+    def camera_reset(self):
+        try:
+            # Access the User Set selector node
+            user_set_selector = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("UserSetSelector"))
+            if not PySpin.IsAvailable(user_set_selector) or not PySpin.IsWritable(user_set_selector):
+                print("Unable to access UserSetSelector. Aborting reset.")
+                return False
+            
+            # Select the default user set
+            user_set_default = user_set_selector.GetEntryByName("Default")
+            if not PySpin.IsAvailable(user_set_default) or not PySpin.IsReadable(user_set_default):
+                print("Default user set is not available. Aborting reset.")
+                return False
+
+            # Set the user set to default
+            user_set_selector.SetIntValue(user_set_default.GetValue())
+
+            # Load the default user set settings
+            user_set_load = PySpin.CCommandPtr(self.cam.GetNodeMap().GetNode("UserSetLoad"))
+            if not PySpin.IsAvailable(user_set_load) or not PySpin.IsWritable(user_set_load):
+                print("Unable to load UserSetLoad. Aborting reset.")
+                return False
+            user_set_load.Execute()
+            
+            print("Camera reset to default settings.")
+
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
+            return False
+        
+        return True
 
 
-    def setup_camera(self):
+    def setup_camera(self, reset=False):
         """Setup the camera and its parameters in order to start communicating with it."""
 
         try:
             # Give the user the option to reset the camera
-            user_input = input("Do you want to reset the camera? (yes/no): ")
-            if user_input.lower() in ["yes", "y"]:
-                # Access the User Set selector node
-                user_set_selector = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("UserSetSelector"))
-                if not PySpin.IsAvailable(user_set_selector) or not PySpin.IsWritable(user_set_selector):
-                    print("Unable to access UserSetSelector. Aborting reset.")
+            if  reset == False:
+                user_input = input("Do you want to reset the camera? (yes/no): ")
+                if user_input.lower() in ["yes", "y"]:
+                    if self.camera_reset() == False:
+                        return False
+                    print("Camera successfully reset.")
+            if reset == True:
+                if self.camera_reset() == False:
                     return False
-                
-                # Select the default user set
-                user_set_default = user_set_selector.GetEntryByName("Default")
-                if not PySpin.IsAvailable(user_set_default) or not PySpin.IsReadable(user_set_default):
-                    print("Default user set is not available. Aborting reset.")
-                    return False
-
-                # Set the user set to default
-                user_set_selector.SetIntValue(user_set_default.GetValue())
-
-                # Load the default user set settings
-                user_set_load = PySpin.CCommandPtr(self.cam.GetNodeMap().GetNode("UserSetLoad"))
-                if not PySpin.IsAvailable(user_set_load) or not PySpin.IsWritable(user_set_load):
-                    print("Unable to load UserSetLoad. Aborting reset.")
-                    return False
-                user_set_load.Execute()
-                
-                print("Camera reset to default settings.")
-
+                print("Camera successfully reset.")
+            
             # Retrieve GenICam nodemap
             self.nodemap = self.cam.GetNodeMap()
 
@@ -206,7 +226,7 @@ class ImageAcquisition:
         return True
         
 
-    def capture(self):
+    def capture(self, test=False, live=False):
         """Continuously capture images and add them to the queue"""
 
         print('\n*** START IMAGE ACQUISITION ***\n')
@@ -248,19 +268,92 @@ class ImageAcquisition:
         # waiting time for image buffer and LED circuit to be ready (error otherwise)
         time.sleep(1)
 
-        while self.running.is_set():
-            # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
-            image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
-            if image.IsIncomplete():
-                print('Image incomplete with image status %d ...' % image.GetImageStatus())
-            elif not self.queue.full():
-                self.queue.put(image)
-                print("Captured image and added to queue.")
-                print(self.queue)
-            else:
-                print("Queue is full. Skipping frame.")
-            # Release image from buffer
-            image.Release()
+        if (not test==True) and (live==False):
+            # Running in normal operation 
+            while self.running.is_set():
+                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                if image.IsIncomplete():
+                    print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                elif not self.queue.full():
+                    self.queue.put(image)
+                    print("Captured image and added to queue.")
+                    print(self.queue)
+                else:
+                    print("Queue is full. Skipping frame.")
+                # Release image from buffer
+                image.Release()
+
+        elif (live==True) and (not test==True):
+            while self.running.is_set():
+                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                if image.IsIncomplete():
+                    print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                elif not self.queue.full():
+                    self.queue.put(image)
+                    print("Captured image and added to queue.")
+                    print(self.queue)
+                else:
+                    print("Queue is full. Skipping frame.")
+                
+                image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                frame = cv2.flip(image_array, 1)
+                
+                value = 20
+                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                h, s, v = cv2.split(hsv)
+                lim = 255 - value
+                v[v > lim] = 255
+                v[v <= lim] += value
+                final_hsv = cv2.merge((h, s, v))
+                frame = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                frame = cv2.equalizeHist(frame)
+
+                # Custom window
+                cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
+                cv2.imshow('preview', frame)
+                cv2.resizeWindow('preview', 500, 500)
+                cv2.waitKey(1)
+
+                # Release image from buffer
+                image.Release()
+        else:
+            print("Running test acquisition...")
+            #  Define the location of the folder to save the images 
+            parent_dir="/home/orin/Snowscope/pictures_Test"
+
+            # Make directory with name {Months-Days_Hours:Minutes:Seconds}
+            current_time_tuple=time.localtime()
+            directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
+            path=os.path.join(parent_dir,directory)
+
+            try:
+                os.makedirs(path, exist_ok=True)
+                print(f"Saving to {path}")
+
+            except OSError as error:
+                print("Error:", error)
+                return False
+            
+            for i in range(10):
+                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                if image.IsIncomplete():
+                    print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
+                
+                filename = os.path.join(path, f"Image_{i}.png")
+                
+                image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                img = np.flipud(np.fliplr(image_array))
+
+                cv2.imwrite(filename, img)
+                image.Release()
+
+    def capture_live(self):
+        self.capture(test=False, live=True)
 
     def close_camera(self):
         """End acquisition, turn off LED and deinitialize the camera."""

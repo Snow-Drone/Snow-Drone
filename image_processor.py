@@ -130,5 +130,6 @@ class ImageProcessor:
             # Define header
             writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity)"])
             # Write values of all saved images to the csv file
+            print(f"Captured {len(data)} snowflakes")
             for image_name, values in data.items():
                 writer.writerow([image_name, json.dumps(values)])
