@@ -297,8 +297,9 @@ class ImageAcquisition:
                 else:
                     print("Queue is full. Skipping frame.")
                 
-                image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-                frame = cv2.flip(image_array, 1)
+                frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                # frame = cv2.flip(frame, 0)
+                frame = np.flipud(np.fliplr(frame))
                 
                 value = 20
                 frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
