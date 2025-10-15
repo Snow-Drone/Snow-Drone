@@ -9,6 +9,7 @@ import time
 
 from image_acquisition import ImageAcquisition
 from image_processor import ImageProcessor
+from read_trisonica import DataLogger
 from hard_reset import *
 
 
@@ -84,6 +85,7 @@ def main():
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
+    data_logger = DataLogger(save_data)
 
     if (not config["test"] == True) and (not config["live"] == True):
         # Start the process if the program is able to open the camera and configure its settings
@@ -94,6 +96,9 @@ def main():
             # Start image processing thread
             processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
             processing_tread.start()
+            
+            weather_logging_threadd = threading.Thread(target=data_logger.log_data, daemon=True)
+            weather_logging_threadd.start()
 
         else:
             return False
