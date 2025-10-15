@@ -278,7 +278,10 @@ class ImageAcquisition:
 
         if (not test==True) and (live==False):
             # Running in normal operation 
+            img_nr = 1
             while self.running.is_set():
+                print(f"{img_nr}")
+                img_nr += 1
                 # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                 image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                 if image.IsIncomplete():
@@ -286,7 +289,7 @@ class ImageAcquisition:
                 elif not self.queue.full():
                     self.queue.put(image)
                     print("Captured image and added to queue.")
-                    print(self.queue)
+                    # print(self.queue)
                 else:
                     print("Queue is full. Skipping frame.")
                 # Release image from buffer
