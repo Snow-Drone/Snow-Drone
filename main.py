@@ -11,12 +11,10 @@ from image_acquisition import ImageAcquisition
 from image_processor import ImageProcessor
 from hard_reset import *
 
-VERSION = "0.1.2"
-
 
 def parse_args():
     # Create Parser
-    parser = argparse.ArgumentParser(prog="Snow-Drone")
+    parser = argparse.ArgumentParser(prog="Snow-Drone", description="A simple script to capture and detect snowflakes for the snow drone project.")
 
     # Add arguments to parser
     parser.add_argument("-e", "--exposure_time", type=int, default=200, required=False) # Set default exposure time to 200 us
@@ -27,10 +25,12 @@ def parse_args():
     parser.add_argument("-q", "--queue_size", type=int, default=100, required=False) # Set default queue size to 50 images
     parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=200, required=False) # Set default gradient threshold to 200 (empirical value)
     parser.add_argument("-T", "--test", action='store_true') # test mode, takes 10 pictures without processing them
-    parser.add_argument("-l", "--live", action='store_true') # displays live feed of camera frames
+    parser.add_argument("-n", "--number", type=int, default=0, required=False, help="Specify number of test images to be taken when in test mode. Is ignored in all other cases.")
+    parser.add_argument("-l", "--live", action='store_true', help="Displays a live video of what the camera sees in a seperate window. Do not use while in headless mode.") # displays live feed of camera frames
     parser.add_argument("-y", "--reset", action='store_true')
-    parser.add_argument("-R", "--hardreset", action='store_true')
-    parser.add_argument("-v", "--version", action='store_true')
+    # parser.add_argument("--no-filter")
+    parser.add_argument("-R", "--hard-reset", action='store_true', help='Runs the FLIR hard reset script for the drone camera and exits')
+    parser.add_argument("-v", '--version', action='version', version='%(prog)s 0.1.3')
 
     # Parse Argumets
     args = parser.parse_args()
@@ -65,14 +65,13 @@ def main():
     # Define camera configuration (settings)
     config = parse_args()
 
-    if config["hardreset"] == True:
+    # print(config)
+    # return True
+
+    if config["hard_reset"] == True:
         print("Performing a hard reset and exiting.")
         hard_reset()
         print("Sucessfully reset all cameras. Exiting now...")
-        return True
-    
-    if config["version"] == True:
-        print(f"Snow-Drone, 2025-v{VERSION}.")
         return True
 
     # if test flag isn't set, run acquisition loop
@@ -138,11 +137,23 @@ def main():
         except KeyboardInterrupt:
             stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data)
     else:
-                
-        print(f"Test flag enabled, acquiring 10 frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
+        n = 10 if (config["number"] == 0) else config["number"]
+        print(f"Test flag enabled, acquiring {n} frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
+        print("Beginning in 5 seconds...")
+        print("5")
+        time.sleep(1)
+        print("4")
+        time.sleep(1)
+        print("3")
+        time.sleep(1)
+        print("2")
+        time.sleep(1)
+        print("1")
+        time.sleep(1)
+        print("GO!")
         try:
             if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
-                camera_acquisition_system.capture(config["test"])
+                camera_acquisition_system.capture(test=config["test"], n=n)
                 camera_acquisition_system.close_camera()
             else:
                 print("Failed to initialise camera")

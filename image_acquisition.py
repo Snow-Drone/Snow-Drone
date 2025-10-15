@@ -7,6 +7,14 @@ import os
 import cv2
 import numpy as np
 
+
+## helper
+def gamma(img_original, gamma = 0.5):
+    lookUpTable = np.empty((1,256), np.uint8)
+    for i in range(256):
+        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
+    return cv2.LUT(img_original, lookUpTable)
+
 class ImageAcquisition:
     def __init__(self, config, queue):
         self.config = config
@@ -226,7 +234,7 @@ class ImageAcquisition:
         return True
         
 
-    def capture(self, test=False, live=False):
+    def capture(self, test=False, live=False, n=10):
         """Continuously capture images and add them to the queue"""
 
         print('\n*** START IMAGE ACQUISITION ***\n')
@@ -299,19 +307,11 @@ class ImageAcquisition:
                 
                 frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
                 # frame = cv2.flip(frame, 0)
-                frame = np.flipud(np.fliplr(frame))
+                # frame = np.flipud(np.flipud(frame))
                 
-                value = 20
-                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-                h, s, v = cv2.split(hsv)
-                lim = 255 - value
-                v[v > lim] = 255
-                v[v <= lim] += value
-                final_hsv = cv2.merge((h, s, v))
-                frame = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                frame = cv2.equalizeHist(frame)
+                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                frame = clahe.apply(frame)
+                frame = gamma(frame)
 
                 # Custom window
                 cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
@@ -339,7 +339,7 @@ class ImageAcquisition:
                 print("Error:", error)
                 return False
             
-            for i in range(10):
+            for i in range(n):
                 # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                 image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                 if image.IsIncomplete():
