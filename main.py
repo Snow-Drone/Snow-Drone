@@ -90,15 +90,16 @@ def main():
     if (not config["test"] == True) and (not config["live"] == True):
         # Start the process if the program is able to open the camera and configure its settings
         if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
+            ## Using notation '_d' as these are daemon threads and '[...]_threadd' looks dumb
             # Start the capture thread
-            capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
-            capture_thread.start()
+            capture_thread_d = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
+            capture_thread_d.start()
             # Start image processing thread
-            processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
-            processing_tread.start()
-            
-            weather_logging_threadd = threading.Thread(target=data_logger.log_data, daemon=True)
-            weather_logging_threadd.start()
+            processing_tread_d = threading.Thread(target=image_processing_system.process_images, daemon=True)
+            processing_tread_d.start()
+            # Start the weather logging thread
+            weather_logging_thread_d = threading.Thread(target=data_logger.log_data, daemon=True)
+            weather_logging_thread_d.start()
 
         else:
             return False
