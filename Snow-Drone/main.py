@@ -1,5 +1,6 @@
 """This is the main program and acts as the interplay between the image acquisition and the image processing."""
 import sys
+import os
 from queue import Queue
 import threading
 import PySpin
@@ -33,8 +34,10 @@ def main():
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
-    data_logger = DataLogger(save_data)
     runner = Runner(mode=None)
+    if os.path.exists("/dev/ttyUSB0"):
+        print("[INFO] Anemometer detected, starting logger...")
+        data_logger = DataLogger(save_data)
     
     ## Main program logic
     if config["test"] == True and config["live"] == True:
