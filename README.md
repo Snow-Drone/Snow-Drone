@@ -15,10 +15,7 @@ Ensure you have the necessary dependencies installed before running the scripts.
 ```bash
 pip install -r requirements.txt
 ```
-Then, install the current package in editable mode
-```bash
-pip install -e .  # install current repository in editable mode
-```
+Additionally, the project requires PySpin, which needs to be installed from source.
 
 
 ## Usage
@@ -26,6 +23,7 @@ To start the image capture and processing, run:
 ```bash
 python3 main.py
 ```
+Program flags may be found under section [Parameters](#Parameters)
 
 ## Parameters
 The following camera parameters can be changed by a command in the terminal at the start of the program.
