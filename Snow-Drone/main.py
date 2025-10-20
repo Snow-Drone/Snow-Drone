@@ -23,7 +23,6 @@ def main():
     if config["hard_reset"] == True:
         print("Performing a hard reset and exiting.")
         hard_reset()
-        print("Sucessfully reset all cameras. Exiting now...")
         return True
 
     # if test flag isn't set, run acquisition loop
