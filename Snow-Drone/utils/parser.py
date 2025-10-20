@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument("-y", "--reset", action='store_true')
     # parser.add_argument("--no-filter")
     parser.add_argument("-R", "--hard-reset", action='store_true', help='Runs the FLIR hard reset script for the drone camera and exits')
-    parser.add_argument("-v", '--version', action='version', version='%(prog)s 0.1.3')
+    parser.add_argument("-v", '--version', action='version', version='%(prog)s 0.1.4')
 
     # Parse Argumets
     args = parser.parse_args()

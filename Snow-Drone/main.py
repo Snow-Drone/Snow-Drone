@@ -8,8 +8,8 @@ import time
 from imaging.image_acquisition import ImageAcquisition
 from imaging.image_processor import ImageProcessor
 from weather_data.read_trisonica import DataLogger
-from utils.parse_args import parse_args
-from utils.hard_reset_cameras import hard_reset
+from utils.parseer import parse_args
+from utils.hard_reset import hard_reset
 
 from run_threads import run_headless_mode, run_live_mode, test_mode, stop_processes
 

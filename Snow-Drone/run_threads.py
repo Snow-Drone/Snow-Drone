@@ -3,9 +3,9 @@ import time
 import PySpin
 from queue import Queue
 
-from camera_acquisition import CameraAcquisition
-from image_processor import ImageProcessor
-from read_trisonica import DataLogger
+from imaging.image_acquisition import CameraAcquisition
+from imaging.image_processor import ImageProcessor
+from weather_data.read_trisonica import DataLogger
 
 
 def run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger):
