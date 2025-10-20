@@ -34,7 +34,7 @@ def main():
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
-    runner = Runner(mode=None)
+    runner = Runner()
     if os.path.exists("/dev/ttyUSB0"):
         print("[INFO] Anemometer detected, starting logger...")
         data_logger = DataLogger(save_data)
