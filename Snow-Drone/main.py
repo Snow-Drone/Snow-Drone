@@ -8,10 +8,12 @@ import time
 from imaging.image_acquisition import ImageAcquisition
 from imaging.image_processor import ImageProcessor
 from weather_data.read_trisonica import DataLogger
+
+from run_threads import Runner
+
 from utils.parser import parse_args
 from utils.hard_reset import hard_reset
 
-from run_threads import run_headless_mode, run_live_mode, test_mode, stop_processes
 
 def main():
     # Define camera configuration (settings)
@@ -32,6 +34,7 @@ def main():
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
     data_logger = DataLogger(save_data)
+    runner = Runner(mode=None)
     
     ## Main program logic
     if config["test"] == True and config["live"] == True:
@@ -40,13 +43,13 @@ def main():
     
     if config["test"] == True:
         # Run in test mode
-        success = test_mode(config, camera_acquisition_system)
+        success = runner.test_mode(config, camera_acquisition_system)
         if not success:
             return False
         
     elif config["live"] == True and not (config["test"] == True):
         # Run in live mode
-        success = run_live_mode(config, camera_acquisition_system, image_processing_system)
+        success = runner.run_live_mode(config, camera_acquisition_system, image_processing_system)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
@@ -56,15 +59,15 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
             
     else:
         # Run in headless mode
-        success = run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
+        success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
@@ -74,11 +77,11 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
 
 if __name__ == "__main__":
     if main():
