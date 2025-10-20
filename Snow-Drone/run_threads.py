@@ -9,22 +9,8 @@ from weather_data.read_trisonica import DataLogger
 
 
 class Runner:
-    def __init__(self, mode):
-        self.mode = mode
-        self.capture_thread = None
-        self.processing_tread = None
-        self.weather_logging_thread = None
-        
-        # if mode not in ['headless', 'live', 'test']:
-        #     raise ValueError("Invalid mode specified. Choose 'headless' or 'live'.")
-        
-        # if mode == 'headless':
-        #     self.run_method = self.run_headless_mode
-        # elif mode == 'live':
-        #     self.run_method = self.run_live_mode
-        # elif mode == 'test':
-        #     self.run_method = self.test_mode
-        
+    def __init__(self):
+        pass        
 
     def run_headless_mode(self, config, camera_acquisition_system, image_processing_system, data_logger):
         if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
@@ -41,7 +27,6 @@ class Runner:
 
         else:
             return False
-        
         ## shouldnt get here
         return True
 
@@ -66,7 +51,7 @@ class Runner:
         print(f"Test flag enabled, acquiring {n} frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
         try:
             if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
-                camera_acquisition_system.capture(test=config["test"], n=n)
+                camera_acquisition_system.test_capture(n=n)
                 camera_acquisition_system.close_camera()
             else:
                 print("Failed to initialise camera")
@@ -76,41 +61,6 @@ class Runner:
             print('Error: %s' % ex)
             return False
         return True
-        # # Initialize camera
-        # system = PySpin.System.GetInstance()
-        # cam_list = system.GetCameras()
-        # if cam_list.GetSize() == 0:
-        #     print("No cameras detected. Exiting test mode.")
-        #     return
-
-        # camera = cam_list.GetByIndex(0)
-        # camera.Init()
-
-        # # Set camera parameters
-        # camera.ExposureTime.SetValue(config["exposure_time"])
-        # camera.Gain.SetValue(config["gain"])
-        # camera.AcquisitionFrameRate.SetValue(config["frame_rate"])
-
-        # # Start acquisition
-        # camera.BeginAcquisition()
-        # print(f"Capturing {config['number']} test images...")
-
-        # for i in range(config["number"]):
-        #     image_result = camera.GetNextImage()
-        #     if image_result.IsIncomplete():
-        #         print(f"Image incomplete with image status {image_result.GetImageStatus()}")
-        #     else:
-        #         print(f"Captured image {i + 1}: width = {image_result.GetWidth()}, height = {image_result.GetHeight()}")
-
-        #     image_result.Release()
-
-        # # End acquisition and clean up
-        # camera.EndAcquisition()
-        # camera.DeInit()
-        # del camera
-        # cam_list.Clear()
-        # system.ReleaseInstance()
-        # print("Test mode completed.")
         
     def stop_processes(self, camera_acquisition_system, image_queue, save_data):
         # Stop the image acquisition process

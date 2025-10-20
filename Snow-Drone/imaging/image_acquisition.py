@@ -233,15 +233,7 @@ class ImageAcquisition:
         
         return True
         
-
-    def capture(self, test=False, live=False, n=10):
-        """Continuously capture images and add them to the queue"""
-
-        print('\n*** START IMAGE ACQUISITION ***\n')
-
-        # Begin Acquisition
-        self.cam.BeginAcquisition()
-
+    def prepare_acquisition(self):
         # Enable Acquisition frame rate control
         node_acquisition_frame_rate_control_enable = PySpin.CBooleanPtr(self.nodemap.GetNode("AcquisitionFrameRateEnabled"))
         if not PySpin.IsAvailable(node_acquisition_frame_rate_control_enable) or not PySpin.IsWritable(node_acquisition_frame_rate_control_enable):
@@ -275,8 +267,21 @@ class ImageAcquisition:
 
         # waiting time for image buffer and LED circuit to be ready (error otherwise)
         time.sleep(1)
+        return True
 
-        if (not test==True) and (live==False):
+    def capture(self, live=False):
+        """Continuously capture images and add them to the queue"""
+
+        print('\n*** START IMAGE ACQUISITION ***\n')
+
+        # Begin Acquisition
+        self.cam.BeginAcquisition()
+        
+        success = self.prepare_acquisition()
+        if not (success == True):
+            return False
+
+        if live == False:
             # Running in normal operation 
             img_nr = 1
             while self.running.is_set():
@@ -295,7 +300,7 @@ class ImageAcquisition:
                 # Release image from buffer
                 image.Release()
 
-        elif (live==True) and (not test==True):
+        elif live == True:
             while self.running.is_set():
                 # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                 image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
@@ -309,14 +314,11 @@ class ImageAcquisition:
                     print("Queue is full. Skipping frame.")
                 
                 frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-                # frame = cv2.flip(frame, 0)
-                # frame = np.flipud(np.flipud(frame))
                 
                 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
                 frame = clahe.apply(frame)
                 frame = gamma(frame)
-
-                # Custom window
+   
                 cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
                 cv2.imshow('preview', frame)
                 cv2.resizeWindow('preview', 500, 500)
@@ -324,40 +326,50 @@ class ImageAcquisition:
 
                 # Release image from buffer
                 image.Release()
-        else:
-            print("Running test acquisition...")
-            #  Define the location of the folder to save the images 
-            parent_dir="/home/orin/Snowscope/pictures_Test"
-
-            # Make directory with name {Months-Days_Hours:Minutes:Seconds}
-            current_time_tuple=time.localtime()
-            directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
-            path=os.path.join(parent_dir,directory)
-
-            try:
-                os.makedirs(path, exist_ok=True)
-                print(f"Saving to {path}")
-
-            except OSError as error:
-                print("Error:", error)
-                return False
-            
-            for i in range(n):
-                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
-                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
-                if image.IsIncomplete():
-                    print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
                 
-                filename = os.path.join(path, f"Image_{i}.png")
+        return True
                 
-                image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-                img = np.flipud(np.fliplr(image_array))
-
-                cv2.imwrite(filename, img)
-                image.Release()
-
     def capture_live(self):
-        self.capture(test=False, live=True)
+        return self.capture(live=True)
+        
+
+    def test_capture(self, n=10):
+        print("Running test acquisition...")
+        #  Define the location of the folder to save the images 
+        parent_dir="/home/orin/Snowscope/pictures_Test"
+        
+        self.cam.BeginAcquisition()
+        
+        success = self.prepare_acquisition()
+        if not (success == True):
+            return False
+
+        # Make directory with name {Months-Days_Hours:Minutes:Seconds}
+        current_time_tuple=time.localtime()
+        directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
+        path=os.path.join(parent_dir,directory)
+
+        try:
+            os.makedirs(path, exist_ok=True)
+            print(f"Saving to {path}")
+
+        except OSError as error:
+            print("Error:", error)
+            return False
+        
+        for i in range(n):
+            # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+            image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+            if image.IsIncomplete():
+                print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
+            
+            filename = os.path.join(path, f"Image_{i}.png")
+            
+            image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+            img = np.flipud(np.fliplr(image_array))
+
+            cv2.imwrite(filename, img)
+            image.Release()
 
     def close_camera(self):
         """End acquisition, turn off LED and deinitialize the camera."""
