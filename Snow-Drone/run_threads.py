@@ -94,23 +94,23 @@ def test_mode(config, camera_acquisition_system):
     # system.ReleaseInstance()
     # print("Test mode completed.")
     
-    def stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data):
-        # Stop the image acquisition process
-        print("\nStopping the process...")
-        # Stop image acquisition
-        camera_acquisition_system.stop_capture()
-        # Wait until the image processor has processed all images from the queue
-        while not image_queue.empty():
-            time.sleep(0.5)
-        # Stop the capture thread
-        capture_thread.join()
-        # Save the data in the image processor file
-        save_data.set()
+def stop_processes(camera_acquisition_system, capture_thread, image_queue, save_data):
+    # Stop the image acquisition process
+    print("\nStopping the process...")
+    # Stop image acquisition
+    camera_acquisition_system.stop_capture()
+    # Wait until the image processor has processed all images from the queue
+    while not image_queue.empty():
         time.sleep(0.5)
-        # Stop the image queue
-        image_queue.join()
-        # Close the camera
-        camera_acquisition_system.close_camera()
+    # Stop the capture thread
+    capture_thread.join()
+    # Save the data in the image processor file
+    save_data.set()
+    time.sleep(0.5)
+    # Stop the image queue
+    image_queue.join()
+    # Close the camera
+    camera_acquisition_system.close_camera()
 
-        print("Capturing stopped and camera closed. Exiting Program.")
-        return True
+    print("Capturing stopped and camera closed. Exiting Program.")
+    return True
