@@ -238,20 +238,20 @@ class ImageAcquisition:
         node_acquisition_frame_rate_control_enable = PySpin.CBooleanPtr(self.nodemap.GetNode("AcquisitionFrameRateEnabled"))
         if not PySpin.IsAvailable(node_acquisition_frame_rate_control_enable) or not PySpin.IsWritable(node_acquisition_frame_rate_control_enable):
             print ('Unable to turn on Acquisition Frame Rate Control Enable (bool retrieval). Aborting...')
-            return False
+            return (_,False)
         node_acquisition_frame_rate_control_enable.SetValue(True)
         
         # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
         node_frame_rate_auto = PySpin.CEnumerationPtr(self.nodemap.GetNode("AcquisitionFrameRateAuto"))
         if not PySpin.IsAvailable(node_frame_rate_auto) or not PySpin.IsWritable(node_frame_rate_auto):
             print('Unable to turn off Frame Rate Auto (enum retrieval). Aborting...')
-            return False
+            return (_,False)
         
         # Trun off automatic frame rate
         node_frame_rate_auto_off = node_frame_rate_auto.GetEntryByName("Off")
         if not PySpin.IsAvailable(node_frame_rate_auto_off) or not PySpin.IsReadable(node_frame_rate_auto_off):
             print ('Unable to set Frame Rate Auto to Off (entry retrieval). Aborting...')
-            return False
+            return (_,False)
         # Retrieve integer value from frame rate auto off
         frame_rate_auto_off = node_frame_rate_auto_off.GetValue()
         # Set integer value from frame rate auto off as new value
@@ -260,14 +260,14 @@ class ImageAcquisition:
         # Check if the acquisition frame rate mode can be accessed
         if self.cam.AcquisitionFrameRate.GetAccessMode() != PySpin.RW:
             print ('Unable to set Frame Rate. Aborting...')
-            return False
+            return (_, False)
         # Set the acquisition frame rate in Hertz ensuring that the desired exposure time does not exceed the maximum
         frame_rate = min(self.config["frame_rate"], self.cam.AcquisitionFrameRate.GetMax())
         self.cam.AcquisitionFrameRate.SetValue(frame_rate)
 
         # waiting time for image buffer and LED circuit to be ready (error otherwise)
         time.sleep(1)
-        return True
+        return (frame_rate, True)
 
     def capture(self, live=False):
         """Continuously capture images and add them to the queue"""
@@ -277,7 +277,7 @@ class ImageAcquisition:
         # Begin Acquisition
         self.cam.BeginAcquisition()
         
-        success = self.prepare_acquisition()
+        (frame_rate, success) = self.prepare_acquisition()
         if not (success == True):
             return False
 
