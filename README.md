@@ -11,10 +11,15 @@ This repository contains Python code for capturing images using a **FLIR Grassho
 5. **Removal from Queue:** The image is removed from the queue after image processing.
 
 ## Requirements
-Ensure you have the necessary dependencies installed before running the scripts. You may need the following Python packages:
+Ensure you have the necessary dependencies installed before running the scripts. In a virtualenv, install the requirements as follws:
 ```bash
-pip install opencv-python numpy flirpy
+pip install -r requirements.txt
 ```
+Then, install the current package in editable mode
+```bash
+pip install -e .  # install current repository in editable mode
+```
+
 
 ## Usage
 To start the image capture and processing, run:
@@ -37,6 +42,12 @@ An example is written below, which changes the exposure time to 150 microseconds
 python3 main.py --exposure_time 150
 ```
 
+Help for usage may be found as follows:
+```bash
+python3 main.py --help
+```
+
 ## Author
 Léon Mamié - Master Student at IFD (ETH Zürich)
+Vikram Damani - Master Student at ETH Zürich
 
