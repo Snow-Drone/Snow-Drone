@@ -331,9 +331,10 @@ class ImageAcquisition:
                     except PySpin.SpinnakerException as ex:
                         print('Error: %s' % ex)
                         return False   
-            except PySpin.SpinnakerException as ex:
-                print('Error: %s' % ex)
-                return False   
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
+            return False  
+         
         return True
                 
     def capture_live(self):
