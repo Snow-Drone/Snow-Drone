@@ -34,9 +34,11 @@ def main():
     camera_acquisition_system = ImageAcquisition(config, image_queue)
     image_processing_system = ImageProcessor(config, image_queue, save_data)
     runner = Runner()
+    data = False
     if os.path.exists("/dev/ttyUSB0"):
         print("[INFO] Anemometer detected, starting logger...")
         data_logger = DataLogger(save_data)
+        data = True
     
     ## Main program logic
     if config["test"] == True and config["live"] == True:
@@ -69,6 +71,9 @@ def main():
             
     else:
         # Run in headless mode
+        if not data:
+            print("[ERROR]: Can't run in headless mode without anemometer attached. Aborting...")
+            return False
         success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
         if not success:
             return False

@@ -270,58 +270,70 @@ class ImageAcquisition:
         """Continuously capture images and add them to the queue"""
         print('\n*** START IMAGE ACQUISITION ***\n')
         
-        # Begin Acquisition
-        self.cam.BeginAcquisition()
+        try:
+            # Begin Acquisition
+            self.cam.BeginAcquisition()
+            
+            (frame_rate, success) = self.prepare_framerate()
+            if not (success == True):
+                return False
+
+            if live == False:
+                # Running in normal operation 
+                img_nr = 1
+                while self.running.is_set():
+                    print(f"{img_nr}")
+                    img_nr += 1
+                    # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                    try:
+                        image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                        if image.IsIncomplete():
+                            print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                        elif not self.queue.full():
+                            self.queue.put(image)
+                            print("Captured image and added to queue.")
+                            # print(self.queue)
+                        else:
+                            print("Queue is full. Skipping frame.")
+                        # Release image from buffer
+                        image.Release()
+                    except PySpin.SpinnakerException as ex:
+                        print('Error: %s' % ex)
+                        return False
+
+            elif live == True:
+                while self.running.is_set():
+                    # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                    try:
+                        image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                        if image.IsIncomplete():
+                            print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                        elif not self.queue.full():
+                            self.queue.put(image)
+                            print("Captured image and added to queue.")
+                            print(self.queue)
+                        else:
+                            print("Queue is full. Skipping frame.")
+                        
+                        frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                        
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        frame = clahe.apply(frame)
+                        frame = gamma(frame)
         
-        (frame_rate, success) = self.prepare_framerate()
-        if not (success == True):
-            return False
+                        cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
+                        cv2.imshow('preview', frame)
+                        cv2.resizeWindow('preview', 800, 600)
+                        cv2.waitKey(1)
 
-        if live == False:
-            # Running in normal operation 
-            img_nr = 1
-            while self.running.is_set():
-                print(f"{img_nr}")
-                img_nr += 1
-                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
-                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
-                if image.IsIncomplete():
-                    print('Image incomplete with image status %d ...' % image.GetImageStatus())
-                elif not self.queue.full():
-                    self.queue.put(image)
-                    print("Captured image and added to queue.")
-                    # print(self.queue)
-                else:
-                    print("Queue is full. Skipping frame.")
-                # Release image from buffer
-                image.Release()
-
-        elif live == True:
-            while self.running.is_set():
-                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
-                image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
-                if image.IsIncomplete():
-                    print('Image incomplete with image status %d ...' % image.GetImageStatus())
-                elif not self.queue.full():
-                    self.queue.put(image)
-                    print("Captured image and added to queue.")
-                    print(self.queue)
-                else:
-                    print("Queue is full. Skipping frame.")
-                
-                frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-                
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-                frame = clahe.apply(frame)
-                frame = gamma(frame)
-   
-                cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
-                cv2.imshow('preview', frame)
-                cv2.resizeWindow('preview', 500, 500)
-                cv2.waitKey(1)
-
-                # Release image from buffer
-                image.Release()      
+                        # Release image from buffer
+                        image.Release()
+                    except PySpin.SpinnakerException as ex:
+                        print('Error: %s' % ex)
+                        return False   
+            except PySpin.SpinnakerException as ex:
+                print('Error: %s' % ex)
+                return False   
         return True
                 
     def capture_live(self):
@@ -332,65 +344,79 @@ class ImageAcquisition:
         print("Running test acquisition...")
         #  Define the location of the folder to save the images 
         parent_dir="/home/orin/Snowscope/pictures_Test"
-        
-        self.cam.BeginAcquisition()
-        
-        (frame_rate, success) = self.prepare_framerate()
-        if not (success == True):
-            return False
-
-        # Make directory with name {Months-Days_Hours:Minutes:Seconds}
-        current_time_tuple=time.localtime()
-        directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
-        path=os.path.join(parent_dir,directory)
-
         try:
-            os.makedirs(path, exist_ok=True)
-            print(f"Saving to {path}")
+            self.cam.BeginAcquisition()
+            
+            (frame_rate, success) = self.prepare_framerate()
+            if not (success == True):
+                return False
 
-        except OSError as error:
-            print("Error:", error)
+            # Make directory with name {Months-Days_Hours:Minutes:Seconds}
+            current_time_tuple=time.localtime()
+            directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
+            path=os.path.join(parent_dir,directory)
+
+            try:
+                os.makedirs(path, exist_ok=True)
+                print(f"Saving to {path}")
+
+            except OSError as error:
+                print("Error:", error)
+                return False
+            
+            for i in range(n):
+                # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
+                try:
+                    image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
+                    if image.IsIncomplete():
+                        print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
+                    
+                    filename = os.path.join(path, f"Image_{i}.png")
+                    
+                    image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                    img = np.flipud(np.fliplr(image_array))
+
+                    cv2.imwrite(filename, img)
+                    image.Release()
+                    
+                except PySpin.SpinnakerException as ex:
+                    print('Error: %s' % ex)
+                    return False
+                
+        except PySpin.SpinnakerException as ex:
+            print('Error: %s' % ex)
             return False
-        
-        for i in range(n):
-            # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
-            image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
-            if image.IsIncomplete():
-                print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
-            
-            filename = os.path.join(path, f"Image_{i}.png")
-            
-            image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-            img = np.flipud(np.fliplr(image_array))
-
-            cv2.imwrite(filename, img)
-            image.Release()
 
     def close_camera(self):
         """End acquisition, turn off LED and deinitialize the camera."""
+        try:
+            self.cam.EndAcquisition()
+            
+            # Turn off the LED
+            node_line_source = PySpin.CEnumerationPtr(self.nodemap.GetNode('LineSource'))
+            if PySpin.IsWritable(node_line_source):
+                entry_line_source_user = node_line_source.GetEntryByName('UserOutput2')
+                node_line_source.SetIntValue(entry_line_source_user.GetValue())
+                print("LED turned off.")
+            else:
+                print("[ERROR:] Unable to turn off LED.")
 
-        self.cam.EndAcquisition()
+            # Deinitialize camera
+            self.cam.DeInit()
+
+            # Release reference to camera
+            del self.cam
+
+            # Clear camera list before releasing system
+            self.cameras.Clear()
+
+            # Release system instance
+            self.system.ReleaseInstance()
+            return True
         
-        # Turn off the LED
-        node_line_source = PySpin.CEnumerationPtr(self.nodemap.GetNode('LineSource'))
-        if PySpin.IsWritable(node_line_source):
-            entry_line_source_user = node_line_source.GetEntryByName('UserOutput2')
-            node_line_source.SetIntValue(entry_line_source_user.GetValue())
-            print("LED turned off.")
-        else:
-            print("[ERROR:] Unable to turn off LED.")
-
-        # Deinitialize camera
-        self.cam.DeInit()
-
-        # Release reference to camera
-        del self.cam
-
-        # Clear camera list before releasing system
-        self.cameras.Clear()
-
-        # Release system instance
-        self.system.ReleaseInstance()
+        except PySpin.SpinnakerException as ex:
+                print('Error: %s' % ex)
+                return False
 
     def stop_capture(self):
         """Stop the capture loop."""
