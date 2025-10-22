@@ -341,7 +341,7 @@ class ImageAcquisition:
         return self.capture(live=True)
         
 
-    def test_capture(self, n=10):
+    def test_capture(self, n=10, show=False):
         print("Running test acquisition...")
         #  Define the location of the folder to save the images 
         parent_dir="/home/orin/Snowscope/pictures_Test"
@@ -376,6 +376,16 @@ class ImageAcquisition:
                     
                     image_array = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
                     img = np.flipud(np.fliplr(image_array))
+                    
+                    if show == True:
+                        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+                        frame = clahe.apply(img)
+                        frame = gamma(frame)
+        
+                        cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
+                        cv2.imshow('preview', frame)
+                        cv2.resizeWindow('preview', 800, 600)
+                        cv2.waitKey(500)
 
                     cv2.imwrite(filename, img)
                     image.Release()

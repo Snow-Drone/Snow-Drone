@@ -51,7 +51,7 @@ class Runner:
         print(f"Test flag enabled, acquiring {n} frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
         try:
             if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
-                camera_acquisition_system.test_capture(n=n)
+                camera_acquisition_system.test_capture(n=n, show=config["live"])
                 camera_acquisition_system.close_camera()
             else:
                 print("Failed to initialise camera")

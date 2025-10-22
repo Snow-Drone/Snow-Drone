@@ -32,7 +32,8 @@ def main():
 
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, image_queue)
-    image_processing_system = ImageProcessor(config, image_queue, save_data)
+    if not config["test"]:
+        image_processing_system = ImageProcessor(config, image_queue, save_data)
     runner = Runner()
     data = False
     if os.path.exists("/dev/ttyUSB0"):
@@ -41,9 +42,6 @@ def main():
         data = True
     
     ## Main program logic
-    if config["test"] == True and config["live"] == True:
-        print("Error: Cannot run in both test mode and live mode simultaneously. Please choose one mode.")
-        return False
     
     if config["test"] == True:
         # Run in test mode
