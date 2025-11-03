@@ -15,7 +15,7 @@ class SnowflakeProcessor:
         self.save_data = save_data
 
         # Define the location of the folder to save the images 
-        parent_dir="/home/orin/Snowscope/pictures_Leon"
+        parent_dir="/mnt/nvme/pictures/snow_drone_images/"
 
         # Make directory with name {Months-Days_Hours:Minutes:Seconds}
         current_time_tuple=time.localtime()
@@ -23,7 +23,7 @@ class SnowflakeProcessor:
         self.path=os.path.join(parent_dir,directory)
 
         try:
-            os.mkdir(self.path)
+            os.makedirs(self.path, exist_ok=False) # fail if the directory already exists
             print("Directory '%s' created" %self.path)
 
         except OSError as error:

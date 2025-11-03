@@ -17,9 +17,6 @@ class ImagePreProcessor:
         self.config = config
         self.save_data = save_data
         
-    def __del__(self):
-        print(f"All images saved to {self.path} (in case you missed it first time...)")
-        
     def flip_image(self, image):
         """Flips an image from the queue that it has the correct orientation."""
 
