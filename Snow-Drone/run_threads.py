@@ -1,12 +1,6 @@
 import threading
 import time
 import PySpin
-from queue import Queue
-
-from imaging.image_acquisition import ImageAcquisition
-from imaging.image_processor import ImageProcessor
-from imaging.snowflake_processor import SnowflakeProcessor
-from weather_data.read_trisonica import DataLogger
 
 
 class Runner:

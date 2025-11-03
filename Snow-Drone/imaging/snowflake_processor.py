@@ -33,7 +33,7 @@ class SnowflakeProcessor:
     def __del__(self):
         print(f"All images saved to {self.path} (in case you missed it first time...)")
         
-    def process_snowflake(self):
+    def process_snowflakes(self):
         """Processes a snowflake image from the queue."""
         pixel_size = 5.86 # in [um]
         data = {}
