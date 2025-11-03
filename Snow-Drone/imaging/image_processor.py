@@ -17,8 +17,8 @@ class ImageProcessor:
         self.save_data = save_data
 
         # Define the location of the folder to save the images 
-        parent_dir="/home/orin/Snowscope/pictures_Leon"
-
+        parent_dir="/mnt/nvme/pictures_Vikram/"
+        
         # Make directory with name {Months-Days_Hours:Minutes:Seconds}
         current_time_tuple=time.localtime()
         directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"

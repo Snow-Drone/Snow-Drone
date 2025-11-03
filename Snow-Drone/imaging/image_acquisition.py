@@ -385,7 +385,7 @@ class ImageAcquisition:
                         cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
                         cv2.imshow('preview', frame)
                         cv2.resizeWindow('preview', 800, 600)
-                        cv2.waitKey(500)
+                        cv2.waitKey(1)
 
                     cv2.imwrite(filename, img)
                     image.Release()
