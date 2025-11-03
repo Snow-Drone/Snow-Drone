@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument("-n", "--number", type=int, default=0, required=False, help="Specify number of test images to be taken when in test mode. Is ignored in all other cases.")
     parser.add_argument("-l", "--live", action='store_true', help="Displays a live video of what the camera sees in a seperate window. Do not use while in headless mode.") # displays live feed of camera frames
     parser.add_argument("-y", "--reset", action='store_true')
+    parser.add_argument("--headless-no-anemometer", action='store_true', help="Allows user to run headless mode when no anemometer is attatched. Generally used for testing.")
     # parser.add_argument("--no-filter")
     parser.add_argument("-R", "--hard-reset", action='store_true', help='Runs the FLIR hard reset script for the drone camera and exits')
     parser.add_argument("-v", '--version', action='version', version='%(prog)s 0.1.4')

@@ -5,6 +5,7 @@ import time
 import os
 import cv2
 import numpy as np
+from imaging.helper import gamma
 
 class ImageAcquisition:
     '''Class to handle image acquisition from the camera and adding them to the processing queue.'''
@@ -280,19 +281,17 @@ class ImageAcquisition:
 
             if live == False:
                 # Running in normal operation 
-                img_nr = 1
                 while self.running.is_set():
-                    print(f"{img_nr}")
-                    img_nr += 1
                     # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                     try:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                         if image.IsIncomplete():
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
+                            # Convert PySpin image to NumPy array
                             self.queue.put(image)
-                            print("Captured image and added to queue.")
-                            # print(self.queue)
+                            print(f"[INFO] Queue size: {self.queue.qsize()}")
+                            print("[INFO] Inserting image in queue")
                         else:
                             print("Queue is full. Skipping frame.")
                         # Release image from buffer
@@ -309,9 +308,11 @@ class ImageAcquisition:
                         if image.IsIncomplete():
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
+                            # Convert PySpin image to NumPy array
+                            print("[INFO] Inserting image in queue")
                             self.queue.put(image)
-                            print("Captured image and added to queue.")
-                            print(self.queue)
+                            print(f"[INFO] Queue size: {self.queue.qsize()}")
+
                         else:
                             print("Queue is full. Skipping frame.")
                         
@@ -434,11 +435,3 @@ class ImageAcquisition:
 
         print("Stopping image capture...")
         self.running.clear()
-
-
-## helper
-def gamma(img_original, gamma = 0.5):
-    lookUpTable = np.empty((1,256), np.uint8)
-    for i in range(256):
-        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
-    return cv2.LUT(img_original, lookUpTable)

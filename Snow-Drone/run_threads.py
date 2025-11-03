@@ -13,14 +13,32 @@ class Runner:
             self.capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
             self.capture_thread.start()
             # Start image processing thread
-            self.preprocessing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
-            self.preprocessing_tread.start()
+            self.processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
+            self.processing_tread.start()
             # Start snowflake processing thread
             self.snowflake_processing_thread = threading.Thread(target=snowflake_processing_system.process_snowflakes, daemon=True)
             self.snowflake_processing_thread.start()
             # Start the weather logging thread
             self.weather_logging_thread = threading.Thread(target=data_logger.log_data, daemon=True)
             self.weather_logging_thread.start()
+            return True
+
+        else:
+            return False
+        ## shouldnt get here
+        return True
+    
+    def run_headless_mode_no_anemometer(self, config, camera_acquisition_system, image_processing_system, snowflake_processing_system):
+        if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
+            # Start the capture thread
+            self.capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)
+            self.capture_thread.start()
+            # Start image processing thread
+            self.processing_tread = threading.Thread(target=image_processing_system.process_images, daemon=True)
+            self.processing_tread.start()
+            # Start snowflake processing thread
+            self.snowflake_processing_thread = threading.Thread(target=snowflake_processing_system.process_snowflakes, daemon=True)
+            self.snowflake_processing_thread.start()
             return True
 
         else:
@@ -69,8 +87,11 @@ class Runner:
         # Stop image acquisition
         camera_acquisition_system.stop_capture()
         # Wait until the image processor has processed all images from the queue
-        while not image_in_queue.empty() or not image_out_queue.empty(): ## logic may be flawed here
+        while not image_in_queue.empty():
             time.sleep(0.5)
+        while not image_out_queue.empty():
+            time.sleep(0.5)
+
         # Stop the capture thread
         self.capture_thread.join()
         # Save the data in the image processor file

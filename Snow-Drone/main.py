@@ -38,6 +38,7 @@ def main():
         image_processing_system = ImagePreProcessor(config, raw_image_queue, processing_queue, save_data)
         snowflake_processing_system = SnowflakeProcessor(config, processing_queue, save_data)
     runner = Runner()
+    
     data = False
     if os.path.exists("/dev/ttyUSB0"):
         print("[INFO] Anemometer detected, starting logger...")
@@ -72,10 +73,13 @@ def main():
             
     else:
         # Run in headless mode
-        if not data:
+        if not data and not config["headless_no_anemometer"]:
             print("[ERROR]: Can't run in headless mode without anemometer attached. Aborting...")
             return False
-        success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, snowflake_processing_system, data_logger)
+        if config["headless_no_anemometer"]:
+            success = runner.run_headless_mode_no_anemometer(config, camera_acquisition_system, image_processing_system, snowflake_processing_system)
+        else:
+            success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, snowflake_processing_system, data_logger)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
