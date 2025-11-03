@@ -7,7 +7,8 @@ import PySpin
 import time
 
 from imaging.image_acquisition import ImageAcquisition
-from imaging.image_processor import ImageProcessor
+from imaging.image_preprocessor import ImagePreProcessor
+from imaging.snowflake_processor import SnowflakeProcessor
 from weather_data.read_trisonica import DataLogger
 
 from run_threads import Runner
@@ -27,13 +28,15 @@ def main():
 
     # if test flag isn't set, run acquisition loop
     # Initialize a queue to temporarily store images and a threading event to signal when to save data
-    image_queue = Queue(maxsize=config["queue_size"])
+    raw_image_queue = Queue(maxsize=config["queue_size"])
+    processing_queue = Queue(maxsize=config["queue_size"])
     save_data = threading.Event()
 
     # Initialize the camera acquisition and image processing systems
-    camera_acquisition_system = ImageAcquisition(config, image_queue)
+    camera_acquisition_system = ImageAcquisition(config, raw_image_queue)
     if not config["test"]:
-        image_processing_system = ImageProcessor(config, image_queue, save_data)
+        image_processing_system = ImagePreProcessor(config, raw_image_queue, processing_queue, save_data)
+        snowflake_processing_system = SnowflakeProcessor(config, processing_queue, save_data)
     runner = Runner()
     data = False
     if os.path.exists("/dev/ttyUSB0"):
@@ -44,14 +47,14 @@ def main():
     ## Main program logic
     
     if config["test"] == True:
-        # Run in test mode
+        # Run in test mode (is allowed to run with live flag as well)
         success = runner.test_mode(config, camera_acquisition_system)
         if not success:
             return False
         
     elif config["live"] == True and not (config["test"] == True):
         # Run in live mode
-        success = runner.run_live_mode(config, camera_acquisition_system, image_processing_system)
+        success = runner.run_live_mode(config, camera_acquisition_system, image_processing_system, snowflake_processing_system)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
@@ -61,18 +64,18 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, processing_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, processing_queue, save_data)
             
     else:
         # Run in headless mode
         if not data:
             print("[ERROR]: Can't run in headless mode without anemometer attached. Aborting...")
             return False
-        success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
+        success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, snowflake_processing_system, data_logger)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
@@ -82,11 +85,13 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, processing_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            runner.stop_processes(camera_acquisition_system, image_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, processing_queue, save_data)
+            
+    return True
 
 if __name__ == "__main__":
     if main():
