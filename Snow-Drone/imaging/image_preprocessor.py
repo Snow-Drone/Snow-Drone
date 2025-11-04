@@ -43,7 +43,11 @@ class ImagePreProcessor:
     def calculate_sharp_edges(self, image):
         # Count amount of sharp edges
         threshold = 10 # Empirical threshold for sharp edges
+        start = time.time_ns()
         sharp_edges = np.sum(image > threshold)
+        end = time.time_ns()
+        elapsed = end - start
+        print(f"[TIME] Sharp edges took {elapsed/1e6:.4f} ms")
         # print("Number of sharp edges:", sharp_edges)
         return sharp_edges
 
