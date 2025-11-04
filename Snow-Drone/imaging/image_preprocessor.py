@@ -80,5 +80,5 @@ class ImagePreProcessor:
                     snowflake_number += 1
                 end = time.time_ns() 
                 elapsed = end - start
-                print(f"[TIME] Took {elapsed/1e6:.4f} ms")
+                print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
                 self.in_queue.task_done()
