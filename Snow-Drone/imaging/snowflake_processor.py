@@ -33,6 +33,10 @@ class SnowflakeProcessor:
     def __del__(self):
         print(f"All images saved to {self.path} (in case you missed it first time...)")
         
+    def flip_image(self, image):
+        """Flips an image from the queue that it has the correct orientation."""
+        return np.flipud(np.fliplr(image))
+        
     def process_snowflakes(self):
         """Processes a snowflake image from the queue."""
         pixel_size = 5.86 # in [um]
@@ -41,6 +45,7 @@ class SnowflakeProcessor:
         while not self.save_data.is_set():
             if not self.in_queue.empty():
                 image = self.in_queue.get()
+                image = self.flip_image(image)
                 snowflake_number += 1
                 # Process the image to detect snowflakes
                                     # Create file in previously generated folder
