@@ -79,8 +79,8 @@ class ImagePreProcessor:
                 gpu_image.upload(image)
 
                 # Perform a Gaussian blur on the image using the GPU
-                gaussian_filter = cv2.cuda.createGaussianFilter(cv2.CV_64FC1, cv2.CV_64FC1, (7, 7), 0)
-                gpu_blurred_image = gaussian_filter.apply(gpu_image)
+                gpu_blurred_image = cv2.cuda.createGaussianFilter(gpu_image.type(), -1, (7, 7), 2)
+                gpu_blurred_image = gpu_blurred_image.apply(gpu_image)
 
                 # Download the result back to the CPU
                 smoothed_image = gpu_blurred_image.download()
