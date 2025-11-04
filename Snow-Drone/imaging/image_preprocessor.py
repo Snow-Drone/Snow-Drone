@@ -20,23 +20,31 @@ class ImagePreProcessor:
         self.kernel_y = np.array([[1, 2, 1],
                                 [0, 0, 0],
                                 [-1, -2, -1]])
+        
+        # Create Sobel filter objects for GPU processing
+        self.sobelx = cv2.cuda_SobelFilter_create(cv2.CV_32F, cv2.CV_32F, 1, 0, ksize=3)
+        self.sobely = cv2.cuda_SobelFilter_create(cv2.CV_32F, cv2.CV_32F, 0, 1, ksize=3)
                
     def flip_image(self, image):
         """Flips an image from the queue that it has the correct orientation."""
         return np.flipud(np.fliplr(image))
 
     def calculate_edges(self, image):
-        """Calculates the amount of sharp edges in the image."""
-
+        """Calculates the amount of sharp edges in the image (GPU mat)."""
         # Calculate gradients of filtered image in x and y direction
         start = time.time_ns()
         # grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
         # grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
-        grad_x = cv2.filter2D(image.astype(np.float32), -1, self.kernel_x)
-        grad_y = cv2.filter2D(image.astype(np.float32), -1, self.kernel_y)
+        # grad_x = cv2.filter2D(image.astype(np.float32), -1, self.kernel_x)
+        # grad_y = cv2.filter2D(image.astype(np.float32), -1, self.kernel_y)
+        gpu_grad_x = self.sobelx.apply(image)
+        gpu_grad_y = self.sobely.apply(image)
         end = time.time_ns()
         elapsed = end - start
         print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
+        # Download gradients back to CPU
+        grad_x = gpu_grad_x.download()
+        grad_y = gpu_grad_y.download()
 
         # # Calculate magnitudes and normalize them
         start = time.time_ns()
