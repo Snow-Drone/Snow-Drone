@@ -14,7 +14,13 @@ class ImagePreProcessor:
         self.out_queue = out_queue
         self.thresh = config["sharp_edges_threshold"]
         self.save_data = save_data
-        
+        self.kernel_x = np.array([[-1, 0, 1],
+                                [-2, 0, 2],
+                                [-1, 0, 1]])
+        self.kernel_y = np.array([[1, 2, 1],
+                                [0, 0, 0],
+                                [-1, -2, -1]])
+               
     def flip_image(self, image):
         """Flips an image from the queue that it has the correct orientation."""
         return np.flipud(np.fliplr(image))
@@ -24,8 +30,10 @@ class ImagePreProcessor:
 
         # Calculate gradients of filtered image in x and y direction
         start = time.time_ns()
-        grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
-        grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+        # grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+        # grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+        grad_x = cv2.filter2D(image.astype(np.float32), -1, self.kernel_x)
+        grad_y = cv2.filter2D(image.astype(np.float32), -1, self.kernel_y)
         end = time.time_ns()
         elapsed = end - start
         print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
