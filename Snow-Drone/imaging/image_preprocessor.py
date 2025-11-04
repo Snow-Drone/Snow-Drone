@@ -74,7 +74,16 @@ class ImagePreProcessor:
                 # image = self.flip_image(image)
 
                 # Remove the high frequency noise with the gaussian blur filter
-                smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
+                # smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
+                gpu_image = cv2.cuda_GpuMat()
+                gpu_image.upload(image)
+
+                # Perform a Gaussian blur on the image using the GPU
+                gaussian_filter = cv2.cuda.createGaussianFilter(cv2.CV_64FC1, cv2.CV_64FC1, (7, 7), 0)
+                gpu_blurred_image = gaussian_filter.apply(gpu_image)
+
+                # Download the result back to the CPU
+                smoothed_image = gpu_blurred_image.download()
 
                 # Save image if the amount of sharp edges in it are above a defined threshold
                 start = time.time_ns()

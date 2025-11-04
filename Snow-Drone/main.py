@@ -5,6 +5,7 @@ from queue import Queue
 import threading
 import PySpin
 import time
+import cv2
 
 from imaging.image_acquisition import ImageAcquisition
 from imaging.image_preprocessor import ImagePreProcessor
@@ -25,6 +26,10 @@ def main():
         print("Performing a hard reset and exiting.")
         hard_reset()
         return True
+    
+    print('CUDA support:', 'Yes' if cv2.cuda.getCudaEnabledDeviceCount() > 0 else 'No')
+    time.sleep(2)
+    
 
     # if test flag isn't set, run acquisition loop
     # Initialize a queue to temporarily store images and a threading event to signal when to save data
