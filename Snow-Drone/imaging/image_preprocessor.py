@@ -23,13 +23,21 @@ class ImagePreProcessor:
         """Calculates the amount of sharp edges in the image."""
 
         # Calculate gradients of filtered image in x and y direction
-        # grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
-        # grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+        start = time.time_ns()
+        grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+        grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+        end = time.time_ns()
+        elapsed = end - start
+        print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
 
         # # Calculate magnitudes and normalize them
-        # magnitude = cv2.magnitude(grad_x, grad_y)
-        laplacian = cv2.Laplacian(image,cv2.CV_64F)
-        magnitude = cv2.convertScaleAbs(laplacian)
+        start = time.time_ns()
+        magnitude = cv2.magnitude(grad_x, grad_y)
+        end = time.time_ns()
+        elapsed = end - start
+        print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
+        # laplacian = cv2.Laplacian(image,cv2.CV_64F)
+        # magnitude = cv2.convertScaleAbs(laplacian)
         return magnitude
     
     def calculate_sharp_edges(self, image):
@@ -54,7 +62,7 @@ class ImagePreProcessor:
                 # image = self.flip_image(image)
 
                 # Remove the high frequency noise with the gaussian blur filter
-                smoothed_image = cv2.GaussianBlur(image, (25, 25), sigmaX=2, sigmaY=2)
+                smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
 
                 # Save image if the amount of sharp edges in it are above a defined threshold
                 start = time.time_ns()
