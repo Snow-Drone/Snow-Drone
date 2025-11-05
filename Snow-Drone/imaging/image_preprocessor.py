@@ -13,16 +13,11 @@ class ImagePreProcessor:
         self.in_queue = in_queue
         self.out_queue = out_queue
         self.save_data = save_data
-        self.kernel_x = np.array([[-1, 0, 1],
-                                [-2, 0, 2],
-                                [-1, 0, 1]])
-        self.kernel_y = np.array([[1, 2, 1],
-                                [0, 0, 0],
-                                [-1, -2, -1]])
-        
-        # Create Sobel filter objects for GPU processing
-        self.sobelx = cv2.createSobelFilter(0, -1, 1, 0, ksize=3)
-        self.sobely = cv2.createSobelFilter(0, -1, 0, 1, ksize=3)
+        # prepare GPU filters
+        self.gpu_blurred_image = cv2.cuda.createGaussianFilter(0, -1, (7, 7), 2)
+        self.sobelx = cv2.cuda.createSobelFilter(0, -1, 1, 0, ksize=3)
+        self.sobely = cv2.cuda.createSobelFilter(0, -1, 0, 1, ksize=3)
+        self.gpu_image = cv2.cuda_GpuMat()
 
     def calculate_edges(self, image):
         """Calculates the amount of sharp edges in the image (GPU mat)."""
@@ -37,9 +32,10 @@ class ImagePreProcessor:
         end = time.time_ns()
         elapsed = end - start
         print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
-        # # Calculate magnitudes and normalize them
+        # Calculate magnitudes and normalize them
         start = time.time_ns()
         magnitude = cv2.cuda.magnitude(grad_x, grad_y)
+        # magnitude = cv2.cuda.addWeighted(grad_x, 0.5, grad_y, 0.5,0)
         end = time.time_ns()
         elapsed = end - start
         print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
@@ -57,18 +53,14 @@ class ImagePreProcessor:
             if not self.in_queue.empty():
                 # Get image from queue and flip it 180 degrees
                 image = self.in_queue.get()
-                image = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-
                 # image = self.flip_image(image)
 
                 # Remove the high frequency noise with the gaussian blur filter
                 # smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
-                gpu_image = cv2.cuda_GpuMat()
-                gpu_image.upload(image)
+                self.gpu_image.upload(image)
 
                 # Perform a Gaussian blur on the image using the GPU
-                gpu_blurred_image = cv2.cuda.createGaussianFilter(gpu_image.type(), -1, (7, 7), 2)
-                smoothed_image = gpu_blurred_image.apply(gpu_image)
+                smoothed_image = self.gpu_blurred_image.apply(self.gpu_image)
 
 
                 start = time.time_ns()
