@@ -46,7 +46,7 @@ def main():
         image_conversion_system = ImageConverter(raw_image_queue, converter_queue, save_data)
         image_processing_system = ImagePreProcessor(config, converter_queue, processing_queue, save_data)
         image_filtering_system = ImageFilter(config, processing_queue, snowflake_queue, save_data)
-        snowflake_processing_system = SnowflakeProcessor(config, processing_queue, save_data)
+        snowflake_processing_system = SnowflakeProcessor(config, snowflake_queue, save_data)
     runner = Runner()
     
     data = False
