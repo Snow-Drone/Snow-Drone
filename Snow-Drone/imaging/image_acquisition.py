@@ -292,8 +292,8 @@ class ImageAcquisition:
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
                             self.queue.put(image)
-                            queuef(f"size: {self.queue.qsize()}", 1)
-                            info("Inserting image in queue")
+                            # queuef(f"size: {self.queue.qsize()}", 1)
+                            # info("Inserting image in queue")
                         else:
                             queuef("Queue is full. Skipping frame.", 1)
                         # Release image from buffer
@@ -310,10 +310,9 @@ class ImageAcquisition:
                         if image.IsIncomplete():
                             info('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
-                            # Convert PySpin image to NumPy array
-                            info("Inserting image in queue")
+                            # info("Inserting image in queue")
                             self.queue.put(image)
-                            queuef(f"size: {self.queue.qsize()}", 1)
+                            # queuef(f"size: {self.queue.qsize()}", 1)
 
                         else:
                             queuef("Queue is full. Skipping frame.", 1)

@@ -36,7 +36,7 @@ class ImageFilter:
                 self.in_queue.task_done()
                 end = time.time_ns()
                 elapsed = end - start
-                timef(f"Sharp edges took {elapsed/1e6:.4f} ms")
+                # timef(f"Sharp edges took {elapsed/1e6:.4f} ms")
                 # queuef(f"size: {self.out_queue.qsize()}", 4)
         
         info(f"Finished all filtering")

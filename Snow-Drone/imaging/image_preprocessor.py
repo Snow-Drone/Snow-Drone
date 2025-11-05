@@ -56,7 +56,7 @@ class ImagePreProcessor:
 
             self.out_queue.put(image)                
             elapsed = end - start
-            timef(f"Basic processing took {elapsed/1e6:.4f} ms")
+            # timef(f"Basic processing took {elapsed/1e6:.4f} ms")
             # queuef(f"size: {self.out_queue.qsize()}", 3)
             self.in_queue.task_done()
                 

@@ -7,6 +7,7 @@ from skimage.measure import label, regionprops
 import math
 import csv
 import json
+from utils.console_colours import info, warn, header, timef, queuef, err, bcolors
 
 class SnowflakeProcessor:
     def __init__(self, config, in_queue, save_data):
@@ -31,7 +32,7 @@ class SnowflakeProcessor:
             return False
         
     def __del__(self):
-        print(f"All images saved to {self.path} (in case you missed it first time...)")
+        info(f"All images saved to {self.path} (in case you missed it first time...)")
         
     def flip_image(self, image):
         """Flips an image from the queue that it has the correct orientation."""
@@ -45,7 +46,7 @@ class SnowflakeProcessor:
         while not self.save_data.is_set():
             if not self.in_queue.empty():
                 image = self.in_queue.get()
-                print(f"[INFO] Image type and shape: {type(image)}, {image.shape}")
+                info(f"Image type and shape: {type(image)}, {image.shape}")
                 image = self.flip_image(image)
                 snowflake_number += 1
                 # Process the image to detect snowflakes
@@ -53,7 +54,7 @@ class SnowflakeProcessor:
                 filename = os.path.join(self.path, f"Snowflake_{snowflake_number}.bmp")
                 # Save image in file
                 cv2.imwrite(filename, image)
-                print(f"Saved potential snowflake: {filename}")
+                info(f"Saved potential snowflake: {filename}")
 
                 # Create binary image with defined threshold
                 thresh = 12
@@ -96,7 +97,7 @@ class SnowflakeProcessor:
             # Define header
             writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity)"])
             # Write values of all saved images to the csv file
-            print(f"Captured {len(data)} snowflakes")
+            info(f"Captured {len(data)} snowflakes")
             for image_name, values in data.items():
                 writer.writerow([image_name, json.dumps(values)])
                 # Save the processed image and data
