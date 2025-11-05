@@ -127,14 +127,14 @@ class ImageAcquisition:
             ## Disable automatic exposure and set exposure -------------------------------------------
             # Check if automatic exposure an be disabled
             if self.cam.ExposureAuto.GetAccessMode() != PySpin.RW:
-                print('[ERROR:] Unable to disable automatic exposure. Aborting...')
+                err('Unable to disable automatic exposure. Aborting...')
                 return False
             # Disable automatic exposure
             self.cam.ExposureAuto.SetValue(PySpin.ExposureAuto_Off)
 
             # Check if exposure time can be changed
             if self.cam.ExposureTime.GetAccessMode() != PySpin.RW:
-                print('[ERROR:] Unable to set exposure time. Aborting...')
+                err('Unable to set exposure time. Aborting...')
                 return False 
             # Set the exposure time in microseconds while ensuring that the desired exposure time does not exceed the maximum
             #TODO: do some calculation to check that exposure time is suitable for frame rate
@@ -144,14 +144,14 @@ class ImageAcquisition:
             ## Disable automatic gain ---------------------------------------------------------------
             # Check if automatic gain can be disabled
             if self.cam.GainAuto.GetAccessMode() != PySpin.RW:
-                print('[ERROR:] Unable to disable automatic gain. Aborting...')
+                err('Unable to disable automatic gain. Aborting...')
                 return False
             # Disable automatic gain
             self.cam.GainAuto.SetValue(PySpin.GainAuto_Off)
 
             # Check if gain can be changed
             if self.cam.Gain.GetAccessMode() != PySpin.RW:
-                print('[ERROR:] Unable to set gain. Aborting...')
+                err('Unable to set gain. Aborting...')
                 return False
             # Set the desired gain value (in dB) while ensuring that the desired gain does not exceed the maximum
             gain_to_set = min(self.config["gain"], self.cam.Gain.GetMax())
@@ -162,13 +162,13 @@ class ImageAcquisition:
             # Set Line Selector
             node_line_selector = PySpin.CEnumerationPtr(self.nodemap.GetNode('LineSelector'))
             if not PySpin.IsAvailable(node_line_selector) or not PySpin.IsWritable(node_line_selector):
-                print('\n[ERROR:] Unable to set Line Selector (enumeration retrieval). Aborting...\n')
+                err('Unable to set Line Selector (enumeration retrieval). Aborting...\n')
                 return False
             
             # Change line selector to line 2
             entry_line_selector_line_2 = node_line_selector.GetEntryByName('Line2')
             if not PySpin.IsAvailable(entry_line_selector_line_2) or not PySpin.IsReadable(entry_line_selector_line_2):
-                print('\n[ERROR:] Unable to set Line Selector (entry retrieval). Aborting...\n')
+                err('Unable to set Line Selector (entry retrieval). Aborting...\n')
                 return False
             # Retrieve integer value from line selector
             line_selector_line_2 = entry_line_selector_line_2.GetValue()
@@ -178,13 +178,13 @@ class ImageAcquisition:
             # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
             node_line_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('LineMode'))
             if not PySpin.IsAvailable(node_line_mode) or not PySpin.IsWritable(node_line_mode):
-                print('\n[ERROR:] Unable to set Line Mode (enumeration retrieval). Aborting...\n')
+                err('Unable to set Line Mode (enumeration retrieval). Aborting...\n')
                 return False
 
             # Set Line Mode to output
             entry_line_mode_output = node_line_mode.GetEntryByName('Output')
             if not PySpin.IsAvailable(entry_line_mode_output) or not PySpin.IsReadable(entry_line_mode_output):
-                print('\n[ERROR:] Unable to set Line Mode (entry retrieval). Aborting...\n')
+                err('Unable to set Line Mode (entry retrieval). Aborting...\n')
                 return False
             # Retrieve integer value from line mode
             line_mode_output = entry_line_mode_output.GetValue()
@@ -194,12 +194,12 @@ class ImageAcquisition:
             # Set Line Source to AllPixel (or AnyPixel, Exposure Active)
             node_line_source = PySpin.CEnumerationPtr(self.nodemap.GetNode('LineSource'))
             if not PySpin.IsAvailable(node_line_source) or not PySpin.IsWritable(node_line_source):
-                print('\n[ERROR:] Unable to set Line Source (enumeration retrieval). Aborting...\n')
+                err('Unable to set Line Source (enumeration retrieval). Aborting...\n')
                 return False
 
             entry_line_source_exposureactive = node_line_source.GetEntryByName('ExposureActive')
             if not PySpin.IsAvailable(entry_line_source_exposureactive) or not PySpin.IsReadable(entry_line_source_exposureactive):
-                print('\n[ERROR:] Unable to set Line Source to ExposureActive. Aborting...\n')
+                err('Unable to set Line Source to ExposureActive. Aborting...\n')
                 return False
             # Retrieve integer value from line source
             line_source_exposureactive = entry_line_source_exposureactive.GetValue()
@@ -209,21 +209,21 @@ class ImageAcquisition:
             # Invert the line
             node_line_inverter = PySpin.CBooleanPtr(self.nodemap.GetNode('LineInverter'))
             if not PySpin.IsWritable(node_line_inverter):
-                print('\n[ERROR:] Unable to set Line Inverter (boolean retrieval). Aborting...\n')
+                err('Unable to set Line Inverter (boolean retrieval). Aborting...\n')
                 return False
             node_line_inverter.SetValue(True)
             
             # Set strobe delay in microseconds
             node_strobe_delay = PySpin.CFloatPtr(self.nodemap.GetNode('StrobeDelay'))
             if not PySpin.IsReadable(node_strobe_delay) or not PySpin.IsWritable(node_strobe_delay):
-                print('\n[ERROR:] Unable to set Strobe Delay (node retrieval). Aborting...\n')
+                err('Unable to set Strobe Delay (node retrieval). Aborting...\n')
                 return False
             node_strobe_delay.SetValue(self.config["strobe_delay"])
             
             # Set strobe duration in microseconds
             node_strobe_duration = PySpin.CFloatPtr(self.nodemap.GetNode('StrobeDuration'))
             if not PySpin.IsReadable(node_strobe_duration) or not PySpin.IsWritable(node_strobe_duration):
-                print('\n[ERROR:] Unable to set Strobe Duration (node retrieval). Aborting...\n')
+                err('Unable to set Strobe Duration (node retrieval). Aborting...\n')
                 return False
             node_strobe_duration.SetValue(self.config["strobe_duration"])
 
@@ -237,20 +237,20 @@ class ImageAcquisition:
         # Enable Acquisition frame rate control
         node_acquisition_frame_rate_control_enable = PySpin.CBooleanPtr(self.nodemap.GetNode("AcquisitionFrameRateEnabled"))
         if not PySpin.IsAvailable(node_acquisition_frame_rate_control_enable) or not PySpin.IsWritable(node_acquisition_frame_rate_control_enable):
-            print ('[ERROR:] Unable to turn on Acquisition Frame Rate Control Enable (bool retrieval). Aborting...')
+            err ('Unable to turn on Acquisition Frame Rate Control Enable (bool retrieval). Aborting...')
             return (_,False)
         node_acquisition_frame_rate_control_enable.SetValue(True)
         
         # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
         node_frame_rate_auto = PySpin.CEnumerationPtr(self.nodemap.GetNode("AcquisitionFrameRateAuto"))
         if not PySpin.IsAvailable(node_frame_rate_auto) or not PySpin.IsWritable(node_frame_rate_auto):
-            print('[ERROR:] Unable to turn off Frame Rate Auto (enum retrieval). Aborting...')
+            err('Unable to turn off Frame Rate Auto (enum retrieval). Aborting...')
             return (_,False)
         
         # Trun off automatic frame rate
         node_frame_rate_auto_off = node_frame_rate_auto.GetEntryByName("Off")
         if not PySpin.IsAvailable(node_frame_rate_auto_off) or not PySpin.IsReadable(node_frame_rate_auto_off):
-            print ('[ERROR:] Unable to set Frame Rate Auto to Off (entry retrieval). Aborting...')
+            err('Unable to set Frame Rate Auto to Off (entry retrieval). Aborting...')
             return (_,False)
         # Retrieve integer value from frame rate auto off
         frame_rate_auto_off = node_frame_rate_auto_off.GetValue()
@@ -259,7 +259,7 @@ class ImageAcquisition:
         
         # Check if the acquisition frame rate mode can be accessed
         if self.cam.AcquisitionFrameRate.GetAccessMode() != PySpin.RW:
-            print ('[ERROR:] Unable to set Frame Rate. Aborting...')
+            err('Unable to set Frame Rate. Aborting...')
             return (_, False)
         # Set the acquisition frame rate in Hertz ensuring that the desired exposure time does not exceed the maximum
         frame_rate = min(self.config["frame_rate"], self.cam.AcquisitionFrameRate.GetMax())
@@ -288,14 +288,14 @@ class ImageAcquisition:
                     try:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                         if image.IsIncomplete():
-                            print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                            info('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
                             self.queue.put(image)
-                            print(f"[INFO] Queue size: {self.queue.qsize()}")
-                            print("[INFO] Inserting image in queue")
+                            queuef(f"size: {self.queue.qsize()}", 1)
+                            info("Inserting image in queue")
                         else:
-                            print("Queue is full. Skipping frame.")
+                            queuef("Queue is full. Skipping frame.", 1)
                         # Release image from buffer
                         image.Release()
                     except PySpin.SpinnakerException as ex:
@@ -308,15 +308,15 @@ class ImageAcquisition:
                     try:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                         if image.IsIncomplete():
-                            print('Image incomplete with image status %d ...' % image.GetImageStatus())
+                            info('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
-                            print("[INFO] Inserting image in queue")
+                            info("Inserting image in queue")
                             self.queue.put(image)
-                            print(f"[INFO] Queue size: {self.queue.qsize()}")
+                            queuef(f"size: {self.queue.qsize()}", 1)
 
                         else:
-                            print("Queue is full. Skipping frame.")
+                            queuef("Queue is full. Skipping frame.", 1)
                         
                         frame = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
                         
@@ -345,7 +345,7 @@ class ImageAcquisition:
         
 
     def test_capture(self, n=10, show=False):
-        print("Running test acquisition...")
+        info("Running test acquisition...")
         #  Define the location of the folder to save the images 
         parent_dir="/home/orin/Snowscope/pictures_Test"
         try:
@@ -362,7 +362,7 @@ class ImageAcquisition:
 
             try:
                 os.makedirs(path, exist_ok=True)
-                print(f"Saving to {path}")
+                info(f"Saving to {path}")
 
             except OSError as error:
                 print("Error:", error)
@@ -373,7 +373,7 @@ class ImageAcquisition:
                 try:
                     image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                     if image.IsIncomplete():
-                        print('Image incomplete with imasge status %d ...' % image.GetImageStatus())
+                        info('Image incomplete with imasge status %d ...' % image.GetImageStatus())
                     
                     filename = os.path.join(path, f"Image_{i}.png")
                     
@@ -411,9 +411,9 @@ class ImageAcquisition:
             if PySpin.IsWritable(node_line_source):
                 entry_line_source_user = node_line_source.GetEntryByName('UserOutput2')
                 node_line_source.SetIntValue(entry_line_source_user.GetValue())
-                print("LED turned off.")
+                info("LED turned off.")
             else:
-                print("[ERROR:] Unable to turn off LED.")
+                err("Unable to turn off LED.")
 
             # Deinitialize camera
             self.cam.DeInit()
@@ -435,5 +435,5 @@ class ImageAcquisition:
     def stop_capture(self):
         """Stop the capture loop."""
 
-        print("Stopping image capture...")
+        info("Stopping image capture...")
         self.running.clear()
