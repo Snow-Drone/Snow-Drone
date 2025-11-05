@@ -292,7 +292,7 @@ class ImageAcquisition:
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
                             self.queue.put(image)
-                            # queuef(f"size: {self.queue.qsize()}", 1)
+                            queuef(f"size: {self.queue.qsize()}", 1)
                             # info("Inserting image in queue")
                         else:
                             queuef("Queue is full. Skipping frame.", 1)

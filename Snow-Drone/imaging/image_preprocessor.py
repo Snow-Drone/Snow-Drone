@@ -42,6 +42,7 @@ class ImagePreProcessor:
                 continue
             # Get image from queue and flip it 180 degrees
             image = self.in_queue.get()
+            self.in_queue.task_done()
             # Upload (async)
             start = time.time_ns()
             # Gaussian → SobelX/Y → magnitude (all on same stream)
@@ -58,6 +59,5 @@ class ImagePreProcessor:
             elapsed = end - start
             # timef(f"Basic processing took {elapsed/1e6:.4f} ms")
             # queuef(f"size: {self.out_queue.qsize()}", 3)
-            self.in_queue.task_done()
                 
         info(f"Finished all preprocessing")
