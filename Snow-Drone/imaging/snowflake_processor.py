@@ -45,7 +45,7 @@ class SnowflakeProcessor:
         while not self.save_data.is_set():
             if not self.in_queue.empty():
                 image = self.in_queue.get()
-                
+                print(f"[INFO] Image type and shape: {type(image)}, {image.shape}")
                 image = self.flip_image(image)
                 snowflake_number += 1
                 # Process the image to detect snowflakes
