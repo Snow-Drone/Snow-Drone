@@ -24,15 +24,13 @@ from utils.console_colours import info, warn, header, timef, queuef, err
 def main():
     # Define camera configuration (settings)
     config = parse_args()
-    queuef("test")
-    queuef("test", 1)
 
     if config["hard_reset"] == True:
-        print("Performing a hard reset and exiting.")
+        info("Performing a hard reset and exiting.")
         hard_reset()
         return True
     
-    print('CUDA support:', 'Yes' if cv2.cuda.getCudaEnabledDeviceCount() > 0 else 'No')    
+    info(f"CUDA support: {'Yes' if cv2.cuda.getCudaEnabledDeviceCount() > 0 else 'No'}")    
 
     # if test flag isn't set, run acquisition loop
     # Initialize a queue to temporarily store images and a threading event to signal when to save data

@@ -1,6 +1,8 @@
 import threading
 import time
 import PySpin
+from utils.console_colours import info, warn, header, timef, queuef, err
+
 
 '''RMK: maybe make a queue daemon queued that allocates more/fewer queues and processors as required. Might improve speed
 '''
@@ -87,13 +89,13 @@ class Runner:
 
     def test_mode(self, config, camera_acquisition_system):
         n = 10 if (config["number"] == 0) else config["number"]
-        print(f"Test flag enabled, acquiring {n} frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
+        info(f"Test flag enabled, acquiring {n} frames to $FOLDER: \n\nUsage help can be found with the --help flag.")
         try:
             if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
                 camera_acquisition_system.test_capture(n=n, show=config["live"])
                 camera_acquisition_system.close_camera()
             else:
-                print("Failed to initialise camera")
+                err("Failed to initialise camera")
                 return False
 
         except PySpin.SpinnakerException as ex:
@@ -103,7 +105,7 @@ class Runner:
         
     def stop_processes(self, camera_acquisition_system, image_raw_queue, image_in_queue, image_out_queue, snowflake_queue, save_data):
         # Stop the image acquisition process
-        print("\nStopping the process...")
+        info("\nStopping the process...")
         # Stop image acquisition
         camera_acquisition_system.stop_capture()
         # Wait until the image processor has processed all images from the queues (non-blocking bc otherwise we get deadlocks)

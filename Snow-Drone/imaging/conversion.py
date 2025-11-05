@@ -3,6 +3,7 @@ import os
 import typing
 import cv2
 import numpy as np
+from utils.console_colours import info, warn, header, timef, queuef, err
 
 class ImageConverter:
     
@@ -19,5 +20,6 @@ class ImageConverter:
                 gpu_image = cv2.cuda_GpuMat()
                 gpu_image.upload(image)
                 self.out_queue.put(gpu_image)
+                # queuef(f"size: {self.out_queue.qsize()}", 2)
                 self.in_queue.task_done()
-        print(f"[INFO] Finished all conversions")
+        info(f"Finished all conversions")

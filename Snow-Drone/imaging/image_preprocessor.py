@@ -6,6 +6,8 @@ import numpy as np
 # import cupy as cp
 import time 
 from imaging.helper import gamma
+from utils.console_colours import info, warn, header, timef, queuef, err, bcolors
+
 
 
 class ImagePreProcessor:
@@ -20,42 +22,19 @@ class ImagePreProcessor:
 
     def calculate_edges(self, image):
         """Calculates the amount of sharp edges in the image (GPU mat)."""
-        # Calculate gradients of filtered image in x and y direction
-        start = time.time_ns()
-        # grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
-        # grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
-        # grad_x = cv2.filter2D(image.astype(np.float32), -1, self.kernel_x)
-        # grad_y = cv2.filter2D(image.astype(np.float32), -1, self.kernel_y)
         grad_x = self.sobelx.apply(image)
         grad_y = self.sobely.apply(image)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
-        # Calculate magnitudes and normalize them
-        start = time.time_ns()
-        # magnitude = cv2.cuda.magnitude(grad_x, grad_y)
+        
         magnitude = cv2.cuda.addWeighted(grad_x, 0.5, grad_y, 0.5,0)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
-        # laplacian = cv2.Laplacian(image,cv2.CV_64F)
-        # magnitude = cv2.convertScaleAbs(laplacian)
         return magnitude
 
     def process_images(self):
         """Continuously processes images from the queue until the process is stopped."""
-
-        # Initialization of image counter and data container
-        snowflake_number = 1
-
         while not self.finished.is_set():
             if not self.in_queue.empty():
                 # Get image from queue and flip it 180 degrees
                 image = self.in_queue.get()
-                # image = self.flip_image(image)
-
-                # Remove the high frequency noise with the gaussian blur filter
-                # smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
+                
                 # Perform a Gaussian blur on the image using the GPU
                 smoothed_image = self.gpu_blurred_image.apply(image)
 
@@ -66,7 +45,8 @@ class ImagePreProcessor:
                 self.out_queue.put(magnitude)
                 end = time.time_ns() 
                 elapsed = end - start
-                print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
+                timef(f"Basic processing took {elapsed/1e6:.4f} ms")
+                # queuef(f"size: {self.out_queue.qsize()}", 3)
                 self.in_queue.task_done()
                 
-        print(f"[INFO] Finished all preprocessing")
+        info(f"Finished all preprocessing")

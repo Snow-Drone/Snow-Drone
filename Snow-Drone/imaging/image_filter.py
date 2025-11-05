@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import time
+from utils.console_colours import info, warn, header, timef, queuef, err
 
 class ImageFilter:
     def __init__(self, config, in_queue, out_queue, finished):
@@ -13,12 +14,7 @@ class ImageFilter:
         
     def calculate_sharp_edges(self, image):
         # Count amount of sharp edges
-        start = time.time_ns()
         sharp_edges = np.sum(image > self.cutoff)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Sharp edges took {elapsed/1e6:.4f} ms")
-        # print("Number of sharp edges:", sharp_edges)
         return sharp_edges
 
     def filter_images(self):
@@ -26,14 +22,19 @@ class ImageFilter:
         while not self.finished.is_set():
             while not self.in_queue.empty():
                 image = self.in_queue.get()
+                start = time.time_ns()
                 # download to cpu
                 image = image.download()
                 # Calculate sharp edges
                 sharp_edges = self.calculate_sharp_edges(image)
                 if sharp_edges > self.threshold:
                     self.out_queue.put(image)
-                    print(f"[INFO] Image passed the filter with {sharp_edges} sharp edges.")
+                    info(f"Image passed the filter with {sharp_edges} sharp edges.")
                     
                 self.in_queue.task_done()
+                end = time.time_ns()
+                elapsed = end - start
+                timef(f"Sharp edges took {elapsed/1e6:.4f} ms")
+                # queuef(f"size: {self.out_queue.qsize()}", 4)
         
-        print(f"[INFO] Finished all filtering")
+        info(f"Finished all filtering")
