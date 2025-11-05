@@ -29,21 +29,21 @@ class ImagePreProcessor:
         """Calculates the amount of sharp edges in the image."""
 
         # Calculate gradients of filtered image in x and y direction
-        start = time.time_ns()
+        # start = time.time_ns()
         # grad_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
         # grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
         grad_x = cv2.filter2D(image.astype(np.float32), -1, self.kernel_x)
         grad_y = cv2.filter2D(image.astype(np.float32), -1, self.kernel_y)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
+        # end = time.time_ns()
+        # elapsed = end - start
+        # print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
 
         # # Calculate magnitudes and normalize them
-        start = time.time_ns()
+        # start = time.time_ns()
         magnitude = cv2.magnitude(grad_x, grad_y)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
+        # end = time.time_ns()
+        # elapsed = end - start
+        # print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
         # laplacian = cv2.Laplacian(image,cv2.CV_64F)
         # magnitude = cv2.convertScaleAbs(laplacian)
         return magnitude
@@ -51,11 +51,11 @@ class ImagePreProcessor:
     def calculate_sharp_edges(self, image):
         # Count amount of sharp edges
         threshold = 10 # Empirical threshold for sharp edges
-        start = time.time_ns()
+        # start = time.time_ns()
         sharp_edges = np.sum(image > threshold)
-        end = time.time_ns()
-        elapsed = end - start
-        print(f"[TIME] Sharp edges took {elapsed/1e6:.4f} ms")
+        # end = time.time_ns()
+        # elapsed = end - start
+        # print(f"[TIME] Sharp edges took {elapsed/1e6:.4f} ms")
         # print("Number of sharp edges:", sharp_edges)
         return sharp_edges
 
@@ -77,7 +77,7 @@ class ImagePreProcessor:
                 smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
 
                 # Save image if the amount of sharp edges in it are above a defined threshold
-                start = time.time_ns()
+                # start = time.time_ns()
                 magnitude = self.calculate_edges(smoothed_image)
                 sharp_edges = self.calculate_sharp_edges(magnitude)
                 # std = cp.std(magnitude)
@@ -86,7 +86,7 @@ class ImagePreProcessor:
                     self.out_queue.put(smoothed_image)
                     print(f"[INFO] Snowflake {snowflake_number} detected and added to processing queue.")
                     snowflake_number += 1
-                end = time.time_ns() 
-                elapsed = end - start
-                print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
+                # end = time.time_ns() 
+                # elapsed = end - start
+                # print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
                 self.in_queue.task_done()
