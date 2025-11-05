@@ -16,9 +16,13 @@ class ImagePreProcessor:
         self.out_queue = out_queue
         self.finished = finished
         # prepare GPU filters
-        self.gpu_blurred_image = cv2.cuda.createGaussianFilter(0, -1, (7, 7), 2)
-        self.sobelx = cv2.cuda.createSobelFilter(0, -1, 1, 0, ksize=3)
-        self.sobely = cv2.cuda.createSobelFilter(0, -1, 0, 1, ksize=3)
+        self.stream = cv.cuda.Stream()
+        gauss = cv.cuda.createGaussianFilter(srcType=cv.CV_8UC1, dstType=cv.CV_8UC1,
+                                     ksize=(3,3), sigma1=0, sigma2=0, borderMode=cv.BORDER_DEFAULT) # (7,7), 2
+        sobelx = cv.cuda.createSobelFilter(cv.CV_8UC1, cv.CV_16S, dx=1, dy=0, ksize=3)
+        sobely = cv.cuda.createSobelFilter(cv.CV_8UC1, cv.CV_16S, dx=0, dy=1, ksize=3)
+        mag_abs = cv.cuda.createMagnitude(cv.CV_16S, cv.CV_16S, cv.CV_16S)  # or compute L1 manually
+        convert16s_to_8u = cv.cuda.createConvertScaleAbs(cv.CV_16S, alpha=1.0, beta=0.0)
 
     def calculate_edges(self, image):
         """Calculates the amount of sharp edges in the image (GPU mat)."""

@@ -17,9 +17,7 @@ class ImageConverter:
             while not self.in_queue.empty():
                 image = self.in_queue.get()
                 image = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
-                gpu_image = cv2.cuda_GpuMat()
-                gpu_image.upload(image)
-                self.out_queue.put(gpu_image)
+                self.out_queue.put(image)
                 # queuef(f"size: {self.out_queue.qsize()}", 2)
                 self.in_queue.task_done()
         info(f"Finished all conversions")
