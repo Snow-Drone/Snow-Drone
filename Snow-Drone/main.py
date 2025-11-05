@@ -11,7 +11,7 @@ from imaging.image_acquisition import ImageAcquisition
 from imaging.image_preprocessor import ImagePreProcessor
 from imaging.snowflake_processor import SnowflakeProcessor
 from imaging.conversion import ImageConverter
-from imaging.filter import ImageFilter
+from imaging.image_filter import ImageFilter
 from weather_data.read_trisonica import DataLogger
 
 from run_threads import Runner
@@ -43,9 +43,9 @@ def main():
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, raw_image_queue)
     if not config["test"]:
-        image_conversion_system = ImageConverter(raw_image_queue, converter_queue)
+        image_conversion_system = ImageConverter(raw_image_queue, converter_queue, save_data)
         image_processing_system = ImagePreProcessor(config, converter_queue, processing_queue, save_data)
-        image_filtering_system = ImageFilter(config, processing_queue, snowflake_queue)
+        image_filtering_system = ImageFilter(config, processing_queue, snowflake_queue, save_data)
         snowflake_processing_system = SnowflakeProcessor(config, processing_queue, save_data)
     runner = Runner()
     

@@ -17,7 +17,6 @@ class ImagePreProcessor:
         self.gpu_blurred_image = cv2.cuda.createGaussianFilter(0, -1, (7, 7), 2)
         self.sobelx = cv2.cuda.createSobelFilter(0, -1, 1, 0, ksize=3)
         self.sobely = cv2.cuda.createSobelFilter(0, -1, 0, 1, ksize=3)
-        self.gpu_image = cv2.cuda_GpuMat()
 
     def calculate_edges(self, image):
         """Calculates the amount of sharp edges in the image (GPU mat)."""
@@ -34,8 +33,8 @@ class ImagePreProcessor:
         print(f"[TIME] Sobel took {elapsed/1e6:.4f} ms")
         # Calculate magnitudes and normalize them
         start = time.time_ns()
-        magnitude = cv2.cuda.magnitude(grad_x, grad_y)
-        # magnitude = cv2.cuda.addWeighted(grad_x, 0.5, grad_y, 0.5,0)
+        # magnitude = cv2.cuda.magnitude(grad_x, grad_y)
+        magnitude = cv2.cuda.addWeighted(grad_x, 0.5, grad_y, 0.5,0)
         end = time.time_ns()
         elapsed = end - start
         print(f"[TIME] Magnitude took {elapsed/1e6:.4f} ms")
@@ -57,17 +56,14 @@ class ImagePreProcessor:
 
                 # Remove the high frequency noise with the gaussian blur filter
                 # smoothed_image = cv2.GaussianBlur(image, (7, 7), sigmaX=2, sigmaY=2)
-                self.gpu_image.upload(image)
-
                 # Perform a Gaussian blur on the image using the GPU
-                smoothed_image = self.gpu_blurred_image.apply(self.gpu_image)
+                smoothed_image = self.gpu_blurred_image.apply(image)
 
 
                 start = time.time_ns()
                 magnitude = self.calculate_edges(smoothed_image)
-                sharp_edges = self.calculate_sharp_edges(magnitude)
                 # std = cp.std(magnitude)
-                self.out_queue.put(sharp_edges)
+                self.out_queue.put(magnitude)
                 end = time.time_ns() 
                 elapsed = end - start
                 print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
