@@ -30,7 +30,7 @@ class Runner:
         ## shouldnt get here
         return True
     
-    def run_headless_mode_no_anemometer(self, config, camera_acquisition_system, image_processing_system, data_logger):
+    def run_headless_mode_no_anemometer(self, config, camera_acquisition_system, image_processing_system):
         if camera_acquisition_system.open_camera() and camera_acquisition_system.setup_camera(config["reset"]):
             # Start the capture thread
             self.capture_thread = threading.Thread(target=camera_acquisition_system.capture, daemon=True)

@@ -280,10 +280,7 @@ class ImageAcquisition:
 
             if live == False:
                 # Running in normal operation 
-                img_nr = 1
                 while self.running.is_set():
-                    print(f"{img_nr}")
-                    img_nr += 1
                     # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                     try:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
