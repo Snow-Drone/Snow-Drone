@@ -2,6 +2,8 @@ import threading
 import time
 import PySpin
 
+'''RMK: maybe make a queue daemon queued that allocates more/fewer queues and processors as required. Might improve speed
+'''
 
 class Runner:
     def __init__(self):
@@ -104,7 +106,7 @@ class Runner:
         print("\nStopping the process...")
         # Stop image acquisition
         camera_acquisition_system.stop_capture()
-        # Wait until the image processor has processed all images from the queue
+        # Wait until the image processor has processed all images from the queues (non-blocking bc otherwise we get deadlocks)
         while not image_raw_queue.empty():
             time.sleep(0.5)
         while not image_in_queue.empty():
@@ -113,17 +115,13 @@ class Runner:
             time.sleep(0.5)
         while not snowflake_queue.empty():
             time.sleep(0.5)
-
+            
         # Stop the capture thread
         self.captured.join()
         # Save the data in the image processor file
         save_data.set()
         time.sleep(0.5)
         # Stop the image queue
-        image_raw_queue.join()
-        image_in_queue.join()
-        image_out_queue.join()
-        snowflake_queue.join()
         # Wait for the processing threads to finish
         self.conversiond.join()
         self.processingd.join()

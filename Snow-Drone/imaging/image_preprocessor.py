@@ -9,10 +9,10 @@ from imaging.helper import gamma
 
 
 class ImagePreProcessor:
-    def __init__(self, config, in_queue, out_queue, save_data):
+    def __init__(self, config, in_queue, out_queue, finished):
         self.in_queue = in_queue
         self.out_queue = out_queue
-        self.save_data = save_data
+        self.finished = finished
         # prepare GPU filters
         self.gpu_blurred_image = cv2.cuda.createGaussianFilter(0, -1, (7, 7), 2)
         self.sobelx = cv2.cuda.createSobelFilter(0, -1, 1, 0, ksize=3)
@@ -48,7 +48,7 @@ class ImagePreProcessor:
         # Initialization of image counter and data container
         snowflake_number = 1
 
-        while not self.save_data.is_set():
+        while not self.finished.is_set():
             if not self.in_queue.empty():
                 # Get image from queue and flip it 180 degrees
                 image = self.in_queue.get()
@@ -68,3 +68,5 @@ class ImagePreProcessor:
                 elapsed = end - start
                 print(f"[TIME] Basic processing took {elapsed/1e6:.4f} ms")
                 self.in_queue.task_done()
+                
+        print(f"[INFO] Finished all preprocessing")

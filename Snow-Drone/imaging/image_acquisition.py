@@ -6,6 +6,8 @@ import os
 import cv2
 import numpy as np
 from imaging.helper import gamma
+from utils.console_colours import info, warn, header, timef, queuef, err
+
 
 class ImageAcquisition:
     '''Class to handle image acquisition from the camera and adding them to the processing queue.'''
@@ -34,7 +36,7 @@ class ImageAcquisition:
                 # Release system instance
                 self.system.ReleaseInstance()
 
-                print('Not enough cameras!')
+                err('Not enough cameras!')
                 input('Done! Press Enter to exit...')
                 return False
             
@@ -45,7 +47,7 @@ class ImageAcquisition:
             self.cam.Init()
         
         except PySpin.SpinnakerException as ex:
-            print('Error: %s' % ex)
+            print('[Error]: %s' % ex)
             return False
 
         return True
@@ -56,13 +58,13 @@ class ImageAcquisition:
             # Access the User Set selector node
             user_set_selector = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("UserSetSelector"))
             if not PySpin.IsAvailable(user_set_selector) or not PySpin.IsWritable(user_set_selector):
-                print("[ERROR:] Unable to access UserSetSelector. Aborting reset.")
+                err("Unable to access UserSetSelector. Aborting reset.")
                 return False
             
             # Select the default user set
             user_set_default = user_set_selector.GetEntryByName("Default")
             if not PySpin.IsAvailable(user_set_default) or not PySpin.IsReadable(user_set_default):
-                print("Default user set is not available. Aborting reset.")
+                err("Default user set is not available. Aborting reset.")
                 return False
 
             # Set the user set to default
@@ -71,11 +73,11 @@ class ImageAcquisition:
             # Load the default user set settings
             user_set_load = PySpin.CCommandPtr(self.cam.GetNodeMap().GetNode("UserSetLoad"))
             if not PySpin.IsAvailable(user_set_load) or not PySpin.IsWritable(user_set_load):
-                print("[ERROR:] Unable to load UserSetLoad. Aborting reset.")
+                err("Unable to load UserSetLoad. Aborting reset.")
                 return False
             user_set_load.Execute()
             
-            print("Camera reset to default settings.")
+            info("Camera reset to default settings.")
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
@@ -94,11 +96,11 @@ class ImageAcquisition:
                 if user_input.lower() in ["yes", "y"]:
                     if self.camera_reset() == False:
                         return False
-                    print("Camera successfully reset.")
+                    info("Camera successfully reset.")
             if reset == True:
                 if self.camera_reset() == False:
                     return False
-                print("Camera successfully reset.")
+                info("Camera successfully reset.")
             
             # Retrieve GenICam nodemap
             self.nodemap = self.cam.GetNodeMap()
@@ -107,12 +109,12 @@ class ImageAcquisition:
             # In order to access the node entries, they have to be casted to a pointer type (CEnumerationPtr here)
             node_acquisition_mode = PySpin.CEnumerationPtr(self.nodemap.GetNode('AcquisitionMode'))
             if not PySpin.IsReadable(node_acquisition_mode) or not PySpin.IsWritable(node_acquisition_mode):
-                print('[ERROR:] Unable to set acquisition mode to continuous (enum retrieval). Aborting...')
+                err('Unable to set acquisition mode to continuous (enum retrieval). Aborting...')
                 return False
             # Set Acquisition mode to continuous
             node_acquisition_mode_continuous = node_acquisition_mode.GetEntryByName('Continuous')
             if not PySpin.IsReadable(node_acquisition_mode_continuous):
-                print('[ERROR:] Unable to set acquisition mode to continuous (entry retrieval). Aborting...')
+                err('Unable to set acquisition mode to continuous (entry retrieval). Aborting...')
                 return False
             # Retrieve integer value from entry node
             acquisition_mode_continuous = node_acquisition_mode_continuous.GetValue()

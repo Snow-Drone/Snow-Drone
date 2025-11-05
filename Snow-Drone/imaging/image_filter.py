@@ -4,12 +4,12 @@ import numpy as np
 import time
 
 class ImageFilter:
-    def __init__(self, config, in_queue, out_queue, save_data):
+    def __init__(self, config, in_queue, out_queue, finished):
         self.threshold = config["sharp_edges_threshold"]
         self.cutoff = config["cutoff_threshold"]
         self.in_queue = in_queue
         self.out_queue = out_queue
-        self.save_data = save_data
+        self.finished = finished
         
     def calculate_sharp_edges(self, image):
         # Count amount of sharp edges
@@ -23,7 +23,7 @@ class ImageFilter:
 
     def filter_images(self):
         """Filters the image based on the defined threshold."""
-        while not self.save_data.is_set():
+        while not self.finished.is_set():
             while not self.in_queue.empty():
                 image = self.in_queue.get()
                 # download to cpu
@@ -35,3 +35,5 @@ class ImageFilter:
                     print(f"[INFO] Image passed the filter with {sharp_edges} sharp edges.")
                     
                 self.in_queue.task_done()
+        
+        print(f"[INFO] Finished all filtering")

@@ -18,11 +18,14 @@ from run_threads import Runner
 
 from utils.parser import parse_args
 from utils.hard_reset import hard_reset
+from utils.console_colours import info, warn, header, timef, queuef, err
 
 
 def main():
     # Define camera configuration (settings)
     config = parse_args()
+    queuef("test")
+    queuef("test", 1)
 
     if config["hard_reset"] == True:
         print("Performing a hard reset and exiting.")
@@ -36,7 +39,7 @@ def main():
     # TODO: adjust queue sizes based on memory benchmarks
     raw_image_queue = Queue(maxsize=config["queue_size"])
     converter_queue = Queue(maxsize=config["queue_size"])
-    processing_queue = Queue(maxsize=config["queue_size"])
+    preprocessing_queue = Queue(maxsize=config["queue_size"])
     snowflake_queue = Queue(maxsize=config["queue_size"])
     save_data = threading.Event()
 
@@ -44,8 +47,8 @@ def main():
     camera_acquisition_system = ImageAcquisition(config, raw_image_queue)
     if not config["test"]:
         image_conversion_system = ImageConverter(raw_image_queue, converter_queue, save_data)
-        image_processing_system = ImagePreProcessor(config, converter_queue, processing_queue, save_data)
-        image_filtering_system = ImageFilter(config, processing_queue, snowflake_queue, save_data)
+        image_processing_system = ImagePreProcessor(config, converter_queue, preprocessing_queue, save_data)
+        image_filtering_system = ImageFilter(config, preprocessing_queue, snowflake_queue, save_data)
         snowflake_processing_system = SnowflakeProcessor(config, snowflake_queue, save_data)
     runner = Runner()
     
@@ -75,12 +78,11 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, processing_queue,snowflake_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, preprocessing_queue, snowflake_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, processing_queue, snowflake_queue, save_data)
-            
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, preprocessing_queue, snowflake_queue, save_data)
     else:
         # Run in headless mode
         if not data and not config["headless_no_anemometer"]:
@@ -99,12 +101,11 @@ def main():
 
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
-            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, processing_queue, snowflake_queue, save_data)
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, preprocessing_queue, snowflake_queue, save_data)
             return False
         
         except KeyboardInterrupt:
-            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, processing_queue, snowflake_queue, save_data)
-            
+            runner.stop_processes(camera_acquisition_system, raw_image_queue, converter_queue, preprocessing_queue, snowflake_queue, save_data)
     return True
 
 if __name__ == "__main__":
