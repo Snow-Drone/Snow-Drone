@@ -12,6 +12,8 @@ class ImageFilter:
         self.out_queue = out_queue
         self.finished = finished
         
+        # preallocate gpu mat 
+        
     def calculate_sharp_edges(self, image):
         # Count amount of sharp edges
         sharp_edges = np.sum(image > self.cutoff)

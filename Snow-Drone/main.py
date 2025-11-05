@@ -30,7 +30,8 @@ def main():
         hard_reset()
         return True
     
-    info(f"CUDA support: {'Yes' if cv2.cuda.getCudaEnabledDeviceCount() > 0 else 'No'}")    
+    info(f"CUDA support: {'Yes' if cv2.cuda.getCudaEnabledDeviceCount() > 0 else 'No'}")
+    info(cv2.getBuildInformation())  
 
     # if test flag isn't set, run acquisition loop
     # Initialize a queue to temporarily store images and a threading event to signal when to save data
@@ -44,8 +45,9 @@ def main():
     # Initialize the camera acquisition and image processing systems
     camera_acquisition_system = ImageAcquisition(config, raw_image_queue)
     if not config["test"]:
-        image_conversion_system = ImageConverter(raw_image_queue, converter_queue, save_data)
-        image_processing_system = ImagePreProcessor(config, converter_queue, preprocessing_queue, save_data)
+        stream = cv2.cuda.Stream()
+        image_conversion_system = ImageConverter(raw_image_queue, converter_queue, stream, save_data)
+        image_processing_system = ImagePreProcessor(config, converter_queue, preprocessing_queue, stream, save_data)
         image_filtering_system = ImageFilter(config, preprocessing_queue, snowflake_queue, save_data)
         snowflake_processing_system = SnowflakeProcessor(config, snowflake_queue, save_data)
     runner = Runner()
@@ -66,7 +68,7 @@ def main():
         
     elif config["live"] == True and not (config["test"] == True):
         # Run in live mode
-        success = runner.run_live_mode(config, camera_acquisition_system, image_conversion_system, image_processing_system,image_filtering_system, snowflake_processing_system)
+        success = runner.run_live_mode(config, camera_acquisition_system, image_conversion_system, image_processing_system, image_filtering_system, snowflake_processing_system)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
