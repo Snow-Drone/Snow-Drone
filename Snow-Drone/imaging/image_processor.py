@@ -24,13 +24,8 @@ class ImageProcessor:
         directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
         self.path=os.path.join(parent_dir,directory)
 
-        try:
-            os.mkdir(self.path)
-            print("Directory '%s' created" %self.path)
-
-        except OSError as error:
-            print("Error:", error)
-            return False
+        os.mkdir(self.path)
+        print("Directory '%s' created" %self.path)
         
     def __del__(self):
         print(f"All images saved to {self.path} (in case you missed it first time...)")
