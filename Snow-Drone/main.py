@@ -69,10 +69,13 @@ def main():
             
     else:
         # Run in headless mode
-        if not data:
-            print("[ERROR]: Can't run in headless mode without anemometer attached. Aborting...")
+        if not data and not config["headless_no_anemometer"]:
+            print("[ERROR]: Can't run in headless mode without anemometer attached. Use --headless-no-anemometer flag to override. Aborting...")
             return False
-        success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
+        if config["headless_no_anemometer"]:
+            success = runner.run_headless_mode(config, camera_acquisition_system, image_processing_system, data_logger)
+        else:
+            success = runner.run_headless_mode_no_anemometer(config, camera_acquisition_system, image_processing_system, data_logger)
         if not success:
             return False
         # Contine the capturing process until an error appears or it is interrupted by the keyboard
