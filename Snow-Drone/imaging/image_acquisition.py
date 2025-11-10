@@ -281,6 +281,7 @@ class ImageAcquisition:
 
             if live == False:
                 # Running in normal operation 
+                image_nr = 0
                 while self.running.is_set():
                     # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                     try:
@@ -291,7 +292,8 @@ class ImageAcquisition:
                             # Convert PySpin image to NumPy array
                             self.queue.put(image)
                             # print(f"[INFO] Queue size: {self.queue.qsize()}")
-                            print("[INFO] Inserting image in queue")
+                            image_nr += 1
+                            print(f"[INFO] Inserting image in queue {image_nr}")
                         else:
                             print("Queue is full. Skipping frame.")
                         # Release image from buffer
