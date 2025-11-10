@@ -22,15 +22,14 @@ class ImageConverter:
         while not self.finished.is_set():
             if self.in_queue.empty():
                 continue
-            start = time.time_ns()
-            image = self.in_queue.get()
+            
+            image = self.in_queue.get(False)
             self.in_queue.task_done()
-            self.src = np.array(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+            
+            self.src = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+            
             gpu_image = cv2.cuda_GpuMat()
             gpu_image.upload(self.src, self.stream)
             self.out_queue.put(gpu_image)
-            end = time.time_ns()
-            duration = end - start
-            queuef(f"size: {self.out_queue.qsize()}, took {duration/1e6} ms", 2)
-
+            
         info(f"Finished all conversions")

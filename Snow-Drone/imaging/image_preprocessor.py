@@ -40,24 +40,15 @@ class ImagePreProcessor:
         while not self.finished.is_set():
             if self.in_queue.empty():
                 continue
-            # Get image from queue and flip it 180 degrees
-            image = self.in_queue.get()
+            image = self.in_queue.get(False)
             self.in_queue.task_done()
-            # Upload (async)
-            start = time.time_ns()
-            # Gaussian → SobelX/Y → magnitude (all on same stream)
+            
             self.gauss.apply(image, self.d_blur, self.stream)
             self.sobelx.apply(self.d_blur, self.d_gx, self.stream)
             self.sobely.apply(self.d_blur, self.d_gy, self.stream)
             cv2.cuda.magnitude(self.d_gx, self.d_gy, self.d_mag, self.stream)
             self.stream.waitForCompletion()
             
-            end = time.time_ns()
-            elapsed = end - start
-
-            self.out_queue.put(image)                
-            elapsed = end - start
-            # timef(f"Basic processing took {elapsed/1e6:.4f} ms")
-            # queuef(f"size: {self.out_queue.qsize()}", 3)
-                
+            self.out_queue.put(image)
+        
         info(f"Finished all preprocessing")
