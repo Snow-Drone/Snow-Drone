@@ -52,3 +52,7 @@ class ImagePreProcessor:
             self.out_queue.put(image)
         
         info(f"Finished all preprocessing")
+
+
+# 37.154718 ms
+# 366.111315 ms

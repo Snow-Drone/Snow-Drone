@@ -33,3 +33,6 @@ class ImageConverter:
             self.out_queue.put(gpu_image)
             
         info(f"Finished all conversions")
+
+# 22.561092 ms
+# 316.448008 ms

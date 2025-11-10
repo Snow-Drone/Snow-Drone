@@ -22,6 +22,7 @@ class ImageFilter:
     def filter_images(self):
         """Filters the image based on the defined threshold."""
         while not self.finished.is_set():
+            
             if self.in_queue.empty():
                 continue
             image = self.in_queue.get(False)
@@ -37,7 +38,11 @@ class ImageFilter:
                 
                 self.out_queue.put(image)
                 info(f"Image passed the filter with {sharp_edges} sharp edges.")
-
                     
             
         info(f"Finished all filtering")
+
+
+# 37.568135 ms
+# 46.287297 ms
+# 222.175869 ms
