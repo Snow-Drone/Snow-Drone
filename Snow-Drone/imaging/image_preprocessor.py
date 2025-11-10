@@ -15,11 +15,11 @@ class ImagePreProcessor:
         self.thresh = config["sharp_edges_threshold"]
         self.save_data = save_data
         self.kernel_x = np.array([[-1, 0, 1],
-                                [-2, 0, 2],
-                                [-1, 0, 1]])
+                                  [-2, 0, 2],
+                                  [-1, 0, 1]])
         self.kernel_y = np.array([[1, 2, 1],
-                                [0, 0, 0],
-                                [-1, -2, -1]])
+                                  [0, 0, 0],
+                                  [-1, -2, -1]])
                
     def flip_image(self, image):
         """Flips an image from the queue that it has the correct orientation."""
