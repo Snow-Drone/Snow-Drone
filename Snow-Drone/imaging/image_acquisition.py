@@ -290,7 +290,7 @@ class ImageAcquisition:
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
-                            self.queue.put(image)
+                            self.queue.put_nowait(image)
                             # print(f"[INFO] Queue size: {self.queue.qsize()}")
                             image_nr += 1
                             print(f"[INFO] Inserting image in queue {image_nr}")
@@ -312,7 +312,7 @@ class ImageAcquisition:
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
                             print("[INFO] Inserting image in queue")
-                            self.queue.put(image)
+                            self.queue.put_nowait(image)
                             # print(f"[INFO] Queue size: {self.queue.qsize()}")
 
                         else:

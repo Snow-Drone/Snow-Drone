@@ -41,6 +41,7 @@ class SnowflakeProcessor:
         while not self.save_data.is_set():
             if not self.in_queue.empty():
                 image = self.in_queue.get()
+                self.in_queue.task_done()
                 snowflake_number += 1
                 # Process the image to detect snowflakes
                                     # Create file in previously generated folder
@@ -79,7 +80,6 @@ class SnowflakeProcessor:
                 data[filename] = list
 
                 # Remove processed image from queue
-                self.in_queue.task_done()
 
         # Create a csv file to save the data
         output_filename = "image_data.csv"
