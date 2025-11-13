@@ -140,7 +140,7 @@ class ImagePreProcessor:
         self.buf_mag.addcmul_(self.buf_gy, self.buf_gy, value=1.0)  # + gy*gy
 
         thr_sq = 100
-        self.buf_mag.add_(-thr_sq).relu_()
+        self.buf_mag.add_(-thr_sq).relu_() # clips all values below the threshold to 0
         return self.buf_mag.sum()   # CUDA scalar
 
     
