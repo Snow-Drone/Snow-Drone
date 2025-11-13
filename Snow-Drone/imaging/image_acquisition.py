@@ -6,6 +6,7 @@ import os
 import cv2
 import numpy as np
 from imaging.helper import gamma
+# from imaging.buffers import H, W, NBUF, buffers, free_q, ready_q
 from utils.console_colours import info, warn, header, timef, queuef, err
 
 
@@ -14,7 +15,8 @@ class ImageAcquisition:
     def __init__(self, config, queue):
         self.config = config
         self.queue = queue
-
+        # for i in range(NBUF): free_q.put(i)
+        # info(f"Free queue populated")
         # Create an Event to control the image capturing loop
         self.running = threading.Event()
         self.running.set()
@@ -129,6 +131,16 @@ class ImageAcquisition:
             #     entry = PySpin.CEnumEntryPtr(entry)
             #     if PySpin.IsAvailable(entry) and PySpin.IsReadable(entry):
             #         print(" -", entry.GetSymbolic())
+            
+            # ## Set stream buffer
+            # smap = self.cam.GetTLStreamNodeMap()
+            # mode = PySpin.CEnumerationPtr(smap.GetNode('StreamBufferHandlingMode'))
+            # mode.SetIntValue(mode.GetEntryByName('NewestOnly').GetValue())
+
+            # cnt_mode = PySpin.CEnumerationPtr(smap.GetNode('StreamDefaultBufferCountMode'))
+            # cnt_mode.SetIntValue(cnt_mode.GetEntryByName('Manual').GetValue())
+            # cnt = PySpin.CIntegerPtr(smap.GetNode('StreamDefaultBufferCount'))
+            # cnt.SetValue(30) 
             
             ## Disable automatic exposure and set exposure -------------------------------------------
             # Check if automatic exposure an be disabled
@@ -295,18 +307,23 @@ class ImageAcquisition:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                         if image.IsIncomplete():
                             info('Image incomplete with image status %d ...' % image.GetImageStatus())
+                            image.Release(); continue
+                            
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
-                            self.queue.put(image)
-                            queuef(f"size: {self.queue.qsize()}", 1)
+                            np_img = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            self.queue.put(np_img)
+                            # queuef(f"size: {self.queue.qsize()}", 1)
                             # info("Inserting image in queue")
                         else:
                             queuef("Queue is full. Skipping frame.", 1)
                         # Release image from buffer
-                        image.Release()
                     except PySpin.SpinnakerException as ex:
                         print('Error: %s' % ex)
                         return False
+                    
+                    finally:
+                        image.Release()
 
             elif live == True:
                 while self.running.is_set():
@@ -315,9 +332,12 @@ class ImageAcquisition:
                         image = self.cam.GetNextImage(int((1.0/frame_rate)*1500))
                         if image.IsIncomplete():
                             info('Image incomplete with image status %d ...' % image.GetImageStatus())
+                            image.Release(); continue
+                            
                         elif not self.queue.full():
                             # info("Inserting image in queue")
-                            self.queue.put(image)
+                            np_img = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            self.queue.put(np_img)
                             # queuef(f"size: {self.queue.qsize()}", 1)
 
                         else:
@@ -332,13 +352,15 @@ class ImageAcquisition:
                         cv2.namedWindow('preview', cv2.WINDOW_KEEPRATIO)
                         cv2.imshow('preview', frame)
                         cv2.resizeWindow('preview', 800, 600)
-                        cv2.waitKey(1)
-
-                        # Release image from buffer
-                        image.Release()
+                        cv2.waitKey(1)                        
                     except PySpin.SpinnakerException as ex:
+                        image.Release()
                         print('Error: %s' % ex)
-                        return False   
+                        return False  
+                    
+                    finally:
+                        image.Release()
+                     
         except PySpin.SpinnakerException as ex:
             print('Error: %s' % ex)
             return False  
