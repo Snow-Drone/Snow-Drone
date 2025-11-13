@@ -65,6 +65,25 @@ Help for usage may be found as follows:
 python3 main.py --help
 ```
 
+## Acuqisition Colour Modes
+
+The camera provides following output modes:
+- Mono8
+- Mono12Packed
+- Mono12p
+- Mono16
+
+which can be determined by uncommenting lines 126--131 in the acquisition model (function `setup_camera`).
+
+```python
+fmt_enum = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("PixelFormat"))
+            entries = fmt_enum.GetEntries()
+            for entry in entries:
+                entry = PySpin.CEnumEntryPtr(entry)
+                if PySpin.IsAvailable(entry) and PySpin.IsReadable(entry):
+                    print(" -", entry.GetSymbolic())
+```
+
 ## Author
 Léon Mamié - Master Student at IFD (ETH Zürich)
 

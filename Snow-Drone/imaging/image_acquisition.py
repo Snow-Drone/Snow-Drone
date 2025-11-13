@@ -123,6 +123,12 @@ class ImageAcquisition:
 
             # Set pixel format to monochrome 8 -------------------------------------------------------
             self.cam.PixelFormat.SetValue(PySpin.PixelFormat_Mono8)
+            # fmt_enum = PySpin.CEnumerationPtr(self.cam.GetNodeMap().GetNode("PixelFormat"))
+            # entries = fmt_enum.GetEntries()
+            # for entry in entries:
+            #     entry = PySpin.CEnumEntryPtr(entry)
+            #     if PySpin.IsAvailable(entry) and PySpin.IsReadable(entry):
+            #         print(" -", entry.GetSymbolic())
             
             ## Disable automatic exposure and set exposure -------------------------------------------
             # Check if automatic exposure an be disabled

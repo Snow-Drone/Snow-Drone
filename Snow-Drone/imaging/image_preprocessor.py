@@ -81,10 +81,10 @@ class ImagePreProcessor:
             
             # Cast to toch tensor
             torch.cuda.synchronize()
-            np.copyto(pinned.numpy(), image) 
+            np.copyto(self.pinned.numpy(), image) 
             
             # To CUDA
-            gpu_u8 = pinned.to("cuda", non_blocking=True)
+            gpu_u8 = self.pinned.to("cuda", non_blocking=True)
             image_tensor = gpu_u8.permute(2,0,1).to(torch.float32).mul_(1/255) # Normalise and permute to expected order by torch
             
             sharp_edges = self.calculate_sharp_edges(image_tensor)
