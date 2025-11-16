@@ -66,8 +66,11 @@ class ImagePreProcessor:
             # Save image if the amount of sharp edges in it are above a defined threshold
             magnitude = self.calculate_edges(smoothed_image)
             sharp_edges = self.calculate_sharp_edges(magnitude)
+            
+            intensity_counts_above_10 = np.sum(smoothed_image > 30)
+            # print(f"[DEBUG] Sharp edges: {sharp_edges}, Intensity counts above 30: {intensity_counts_above_10}")
 
-            if sharp_edges > self.thresh:
+            if (sharp_edges > self.thresh) or (intensity_counts_above_10 > self.thresh * 4):
                 # Don't write to full queue
                 if self.out_queue.full():
                     print("Snowflake queue full")
@@ -77,6 +80,6 @@ class ImagePreProcessor:
                 print(f"[INFO] Snowflake {snowflake_number} detected and added to processing queue.")
                 snowflake_number += 1
 
-            end = time.time_ns()
-            duration = end - start
-            print(f"PROCESSING took {duration/1e6} ms")
+            # end = time.time_ns()
+            # duration = end - start
+            # print(f"PROCESSING took {duration/1e6} ms")
