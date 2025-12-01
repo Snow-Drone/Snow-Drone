@@ -76,7 +76,7 @@ class ImagePreProcessor:
                     print("Snowflake queue full")
                     continue
                 
-                self.out_queue.put_nowait((smoothed_image, date))
+                self.out_queue.put_nowait((image, date)) # put the unsmoothed image into queue
                 print(f"[INFO] Snowflake {snowflake_number} detected and added to processing queue.")
                 snowflake_number += 1
 

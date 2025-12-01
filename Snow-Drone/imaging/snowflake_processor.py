@@ -37,6 +37,8 @@ class SnowflakeProcessor:
         """Processes a snowflake image from the queue."""
         pixel_size = 5.86 # in [um]
         data = {}
+        factor = 2
+        
         snowflake_number = 0
         while not self.save_data.is_set():
             if not self.in_queue.empty():
@@ -50,3 +52,20 @@ class SnowflakeProcessor:
                 # Save image in file
                 cv2.imwrite(filename, image)
                 print(f"Saved potential snowflake: {filename}")
+                
+                
+                ################################################
+                # downsampling template
+                # smooth = cv2.bilateralFilter(image, d=5, sigmaColor=75, sigmaSpace=75) # optional, uncomment only if sure
+                
+                # resize image
+                # h, w = image.shape[:2]
+                # new_w = w // factor
+                # new_h = h // factor
+                
+                # INTER_AREA uses pixel area relation - very close to proper averaging
+                # image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                
+                # unsharp masking maybe (also optional)
+                # blur = cv2.GaussianBlur(image, (0, 0), sigmaX=1.0)
+                # sharp = cv2.addWeighted(image, 1.7, blur, -0.7, 0)
