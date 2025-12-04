@@ -39,7 +39,7 @@ class ImagePreProcessor:
         return magnitude
     
     def calculate_sharp_edges(self, image):
-        threshold = 0 # Empirical threshold for sharp edges
+        threshold = 10 # Empirical threshold for sharp edges
         sharp_edges = np.sum(image > threshold)
         return sharp_edges
 
@@ -67,7 +67,7 @@ class ImagePreProcessor:
             magnitude = self.calculate_edges(smoothed_image)
             sharp_edges = self.calculate_sharp_edges(magnitude)
             
-            intensity_counts_above_10 = np.sum(smoothed_image > 0)#30)
+            intensity_counts_above_10 = np.sum(smoothed_image > 30)
             # print(f"[DEBUG] Sharp edges: {sharp_edges}, Intensity counts above 30: {intensity_counts_above_10}")
 
             if (sharp_edges > self.thresh) or (intensity_counts_above_10 > self.thresh * 4):
