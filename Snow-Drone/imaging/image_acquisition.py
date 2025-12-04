@@ -12,9 +12,7 @@ from datetime import datetime
 def fast_timestamp():
     now = datetime.now()
     ms = now.microsecond // 1000
-    return f"{now.year % 100:02d}{now.month:02d}{now.day:02d}_" \
-           f"{now.hour:02d}{now.minute:02d}{now.second:02d}_" \
-           f"{ms:03d}"
+    return f"{now.hour:02d}-{now.minute:02d}-{now.second:02d}_" + f"{ms:03d}"
 
 class ImageAcquisition:
     '''Class to handle image acquisition from the camera and adding them to the processing queue.'''

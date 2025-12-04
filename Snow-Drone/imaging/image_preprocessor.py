@@ -39,7 +39,7 @@ class ImagePreProcessor:
         return magnitude
     
     def calculate_sharp_edges(self, image):
-        threshold = 0# 10 # Empirical threshold for sharp edges
+        threshold = 0 # Empirical threshold for sharp edges
         sharp_edges = np.sum(image > threshold)
         return sharp_edges
 

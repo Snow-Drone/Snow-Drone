@@ -45,57 +45,8 @@ class SnowflakeProcessor:
                 snowflake_number += 1
                 # Process the image to detect snowflakes
                                     # Create file in previously generated folder
-                filename = os.path.join(self.path, f"Snowflake_{snowflake_number}.bmp")
+                print(f"Processing snowflake number {snowflake_number} taken at {date}")
+                filename = os.path.join(self.path, f"{date}_Snowflake_{snowflake_number}.bmp")
                 # Save image in file
                 cv2.imwrite(filename, image)
                 print(f"Saved potential snowflake: {filename}")
-
-                # Create binary image with defined threshold
-                thresh = 12
-                binary_image = ((image > thresh) * 255)
-                # Morphological closing to fill small holes inside snowlakes
-                kernel = np.ones((15, 15), np.uint8)
-                closed_binary_image = cv2.morphologyEx(binary_image.astype(np.uint8), cv2.MORPH_CLOSE, kernel, iterations=3)
-                # Calculate regions of snowflakes in image
-                label_img = label(closed_binary_image)
-                snowflakes = regionprops(label_img)
-                # Initialize a list to store characteristic values of snowflakes
-                values = []
-
-                for snowflake in snowflakes:
-                    # Only save the snowflakes that are bigger than 50 pixel in diameter
-                    if snowflake.equivalent_diameter_area >= 50:
-                        # Append center of snowflake
-                        values.append(snowflake.centroid)
-                        # Append orientation of snowflake in grad
-                        values.append((180*snowflake.orientation)/math.pi)
-                        # Append aspect ratio of snowflake
-                        values.append(snowflake.axis_minor_length/snowflake.axis_major_length)
-                        # Append diameter in micrometers
-                        values.append(snowflake.equivalent_diameter_area*pixel_size)
-                        # Append complexity parameter of snowflake
-                        values.append(snowflake.perimeter/(math.pi*snowflake.equivalent_diameter_area))
-                        
-                        # Append timestamp yyymmddHHMMSS
-                        # list.append(time.strftime("%Y%m%d%H%M%S", time.localtime()))
-                        values.append(date)
-                
-                # Store the data list together with their filename
-                data[filename] = values
-
-                # Remove processed image from queue
-
-        # Create a csv file to save the data
-        output_filename = "image_data.csv"
-        output_path = os.path.join(self.path, output_filename)
-        # Write the data into the created csv file
-        with open(output_path, "w", newline="") as f:
-            writer = csv.writer(f)
-            # Define header
-            writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity, timestamp)"])
-            # Write values of all saved images to the csv file
-            print(f"Captured {len(data)} snowflakes")
-            for image_name, values in data.items():
-                writer.writerow([image_name, json.dumps(values)])
-                # Save the processed image and data
-                # (Implementation of saving goes here)
