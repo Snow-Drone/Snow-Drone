@@ -40,7 +40,7 @@ class SnowflakeProcessor:
         snowflake_number = 0
         while not self.save_data.is_set():
             if not self.in_queue.empty():
-                image = self.in_queue.get()
+                image, date = self.in_queue.get()
                 self.in_queue.task_done()
                 snowflake_number += 1
                 # Process the image to detect snowflakes
@@ -60,24 +60,28 @@ class SnowflakeProcessor:
                 label_img = label(closed_binary_image)
                 snowflakes = regionprops(label_img)
                 # Initialize a list to store characteristic values of snowflakes
-                list = []
+                values = []
 
                 for snowflake in snowflakes:
                     # Only save the snowflakes that are bigger than 50 pixel in diameter
                     if snowflake.equivalent_diameter_area >= 50:
                         # Append center of snowflake
-                        list.append(snowflake.centroid)
+                        values.append(snowflake.centroid)
                         # Append orientation of snowflake in grad
-                        list.append((180*snowflake.orientation)/math.pi)
+                        values.append((180*snowflake.orientation)/math.pi)
                         # Append aspect ratio of snowflake
-                        list.append(snowflake.axis_minor_length/snowflake.axis_major_length)
+                        values.append(snowflake.axis_minor_length/snowflake.axis_major_length)
                         # Append diameter in micrometers
-                        list.append(snowflake.equivalent_diameter_area*pixel_size)
+                        values.append(snowflake.equivalent_diameter_area*pixel_size)
                         # Append complexity parameter of snowflake
-                        list.append(snowflake.perimeter/(math.pi*snowflake.equivalent_diameter_area))
+                        values.append(snowflake.perimeter/(math.pi*snowflake.equivalent_diameter_area))
+                        
+                        # Append timestamp yyymmddHHMMSS
+                        # list.append(time.strftime("%Y%m%d%H%M%S", time.localtime()))
+                        values.append(date)
                 
                 # Store the data list together with their filename
-                data[filename] = list
+                data[filename] = values
 
                 # Remove processed image from queue
 
@@ -88,7 +92,7 @@ class SnowflakeProcessor:
         with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
             # Define header
-            writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity)"])
+            writer.writerow(["image path", "values (center of centroid, orientation, aspect ratio, diameter, complexity, timestamp)"])
             # Write values of all saved images to the csv file
             print(f"Captured {len(data)} snowflakes")
             for image_name, values in data.items():

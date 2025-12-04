@@ -10,7 +10,7 @@ def parse_args():
     parser.add_argument("-stdel", "--strobe_delay", type=int, default=0, required=False) # Set default storbe delay to 0 us
     parser.add_argument("-g", "--gain", type=float, default=29.0, required=False) # Set default gain to the maximum value
     parser.add_argument("-f", "--frame_rate", type=float, default=10.0, required=False) # Set default frame rate to the max
-    parser.add_argument("-q", "--queue_size", type=int, default=500, required=False) # Set default queue size to 50 images
+    parser.add_argument("-q", "--queue_size", type=int, default=100, required=False) # Set default queue size to 50 images
     parser.add_argument("-set", "--sharp_edges_threshold", type=int, default=100, required=False) # Set default gradient threshold to 200 (empirical value)
     parser.add_argument("-T", "--test", action='store_true') # test mode, takes 10 pictures without processing them
     parser.add_argument("-n", "--number", type=int, default=0, required=False, help="Specify number of test images to be taken when in test mode. Is ignored in all other cases.")

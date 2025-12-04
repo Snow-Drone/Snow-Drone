@@ -7,6 +7,15 @@ import cv2
 import numpy as np
 from imaging.helper import gamma
 
+from datetime import datetime
+
+def fast_timestamp():
+    now = datetime.now()
+    ms = now.microsecond // 1000
+    return f"{now.year % 100:02d}{now.month:02d}{now.day:02d}_" \
+           f"{now.hour:02d}{now.minute:02d}{now.second:02d}_" \
+           f"{ms:03d}"
+
 class ImageAcquisition:
     '''Class to handle image acquisition from the camera and adding them to the processing queue.'''
     def __init__(self, config, queue):
@@ -289,8 +298,10 @@ class ImageAcquisition:
                         if image.IsIncomplete():
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
-                            # Convert PySpin image to NumPy array
-                            self.queue.put_nowait(image)
+                            frame = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            # current time for metadata
+                            now = fast_timestamp()
+                            self.queue.put_nowait((frame, now))
                             # print(f"[INFO] Queue size: {self.queue.qsize()}")
                             image_nr += 1
                             print(f"[INFO] Inserting image in queue {image_nr}")
