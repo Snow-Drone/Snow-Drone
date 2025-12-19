@@ -9,26 +9,11 @@ import csv
 import json
 
 class SnowflakeProcessor:
-    def __init__(self, config, in_queue, save_data):
+    def __init__(self, config, in_queue, save_data, path):
         self.in_queue = in_queue
         self.config = config
         self.save_data = save_data
-
-        # Define the location of the folder to save the images 
-        parent_dir="/mnt/nvme/pictures/snow_drone_images/"
-
-        # Make directory with name {Months-Days_Hours:Minutes:Seconds}
-        current_time_tuple=time.localtime()
-        directory = f"{current_time_tuple[1]}-{current_time_tuple[2]}_{current_time_tuple[3]}-{current_time_tuple[4]}-{current_time_tuple[5]}"
-        self.path=os.path.join(parent_dir,directory)
-
-        try:
-            os.makedirs(self.path, exist_ok=False) # fail if the directory already exists
-            print("Directory '%s' created" %self.path)
-
-        except OSError as error:
-            print("Error:", error)
-            return False
+        self.path = path
         
     def __del__(self):
         print(f"All images saved to {self.path} (in case you missed it first time...)")

@@ -320,8 +320,10 @@ class ImageAcquisition:
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
                             # Convert PySpin image to NumPy array
-                            print("[INFO] Inserting image in queue")
-                            self.queue.put_nowait(image)
+                            frame = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            # current time for metadata
+                            now = fast_timestamp()
+                            self.queue.put_nowait((frame, now))
                             # print(f"[INFO] Queue size: {self.queue.qsize()}")
 
                         else:
@@ -356,7 +358,7 @@ class ImageAcquisition:
     def test_capture(self, n=10, show=False):
         print("Running test acquisition...")
         #  Define the location of the folder to save the images 
-        parent_dir="/home/orin/Snowscope/pictures_Test"
+        parent_dir="/nvme/pictures_Test"
         try:
             self.cam.BeginAcquisition()
             
