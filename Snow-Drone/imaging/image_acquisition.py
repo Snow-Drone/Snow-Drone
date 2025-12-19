@@ -5,6 +5,14 @@ import time
 import os
 import cv2
 import numpy as np
+from imaging.helper import gamma
+
+from datetime import datetime
+
+def fast_timestamp():
+    now = datetime.now()
+    ms = now.microsecond // 1000
+    return f"{now.hour:02d}-{now.minute:02d}-{now.second:02d}_" + f"{ms:03d}"
 
 class ImageAcquisition:
     '''Class to handle image acquisition from the camera and adding them to the processing queue.'''
@@ -280,6 +288,7 @@ class ImageAcquisition:
 
             if live == False:
                 # Running in normal operation 
+                image_nr = 0
                 while self.running.is_set():
                     # Capture image with a specified time-out value in miliseconds (time the program waits to get an image)
                     try:
@@ -287,9 +296,13 @@ class ImageAcquisition:
                         if image.IsIncomplete():
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
-                            self.queue.put(image)
-                            print("Captured image and added to queue.")
-                            # print(self.queue)
+                            frame = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            # current time for metadata
+                            now = fast_timestamp()
+                            self.queue.put_nowait((frame, now))
+                            # print(f"[INFO] Queue size: {self.queue.qsize()}")
+                            image_nr += 1
+                            print(f"[INFO] Inserting image in queue {image_nr}")
                         else:
                             print("Queue is full. Skipping frame.")
                         # Release image from buffer
@@ -306,9 +319,13 @@ class ImageAcquisition:
                         if image.IsIncomplete():
                             print('Image incomplete with image status %d ...' % image.GetImageStatus())
                         elif not self.queue.full():
-                            self.queue.put(image)
-                            print("Captured image and added to queue.")
-                            print(self.queue)
+                            # Convert PySpin image to NumPy array
+                            frame = np.frombuffer(image.GetData(), dtype=np.uint8).reshape(image.GetHeight(), image.GetWidth())
+                            # current time for metadata
+                            now = fast_timestamp()
+                            self.queue.put_nowait((frame, now))
+                            # print(f"[INFO] Queue size: {self.queue.qsize()}")
+
                         else:
                             print("Queue is full. Skipping frame.")
                         
@@ -341,7 +358,7 @@ class ImageAcquisition:
     def test_capture(self, n=10, show=False):
         print("Running test acquisition...")
         #  Define the location of the folder to save the images 
-        parent_dir="/home/orin/Snowscope/pictures_Test"
+        parent_dir="/nvme/pictures_Test"
         try:
             self.cam.BeginAcquisition()
             
@@ -431,11 +448,3 @@ class ImageAcquisition:
 
         print("Stopping image capture...")
         self.running.clear()
-
-
-## helper
-def gamma(img_original, gamma = 0.5):
-    lookUpTable = np.empty((1,256), np.uint8)
-    for i in range(256):
-        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
-    return cv2.LUT(img_original, lookUpTable)
