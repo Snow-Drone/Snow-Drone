@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Local Image Server</title>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1>Image Gallery</h1>
+        </div>
+    </header>
+
+    <main class="container main">
+        <div id="image-gallery" class="image-gallery">
+            {% for image in images %}
+                <div class="image-card">
+                    <button class="image-button" aria-label="Open image">
+                        <img src="{{ image }}" data-src="{{ image }}" alt="Image" class="image-item" loading="lazy" />
+                        <div class="overlay">
+                            <div class="caption">{{ image.split('/')[-1] }}</div>
+                        </div>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Lightbox modal -->
+    <div id="lightbox" class="lightbox" aria-hidden="true">
+        <button id="lightbox-close" class="lightbox-close" aria-label="Close">✕</button>
+        <button id="lightbox-prev" class="lightbox-nav lightbox-prev" aria-label="Previous">◀</button>
+        <div class="lightbox-content">
+            <img id="lightbox-image" src="" alt="" />
+            <div id="lightbox-caption" class="lightbox-caption"></div>
+        </div>
+        <button id="lightbox-next" class="lightbox-nav lightbox-next" aria-label="Next">▶</button>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
